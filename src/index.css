@@ -1,0 +1,67 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Menu responsivo */
+@media (min-width: 769px) {
+  .mobile-menu {
+    display: none !important;
+  }
+  .desktop-menu {
+    display: flex !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .mobile-menu {
+    display: block !important;
+  }
+  .desktop-menu {
+    display: none !important;
+  }
+  
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .form-container {
+    padding: 15px !important;
+  }
+  
+  .form-container input,
+  .form-container select {
+    width: 100%;
+    margin: 5px 0;
+    padding: 12px;
+    font-size: 16px;
+  }
+  
+  .menu-item:hover {
+    background-color: rgba(0, 123, 255, 0.1) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .annual-chart {
+    overflow-x: auto;
+  }
+  
+  .investment-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
