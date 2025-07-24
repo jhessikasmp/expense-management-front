@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { User, Expense, Investment, TravelFund } from '../types';
 
-const API_BASE_URL = 'http://localhost:4000/api';
+const API_BASE_URL = 'https://expense-management-back.onrender.com';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
