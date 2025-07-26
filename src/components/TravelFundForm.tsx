@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '../types';
 import { useTheme } from './ThemeProvider';
+import { fundService } from '../services/api';
 
 interface TravelEntry {
   _id?: string;
@@ -20,13 +21,28 @@ export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) =
   const [entries, setEntries] = useState<TravelEntry[]>([]);
 
   useEffect(() => {
-    const savedEntries = JSON.parse(localStorage.getItem('travelFundEntries') || '[]');
-    setEntries(savedEntries);
+    loadEntries();
   }, []);
 
-  const saveEntries = (newEntries: TravelEntry[]) => {
-    setEntries(newEntries);
-    localStorage.setItem('travelFundEntries', JSON.stringify(newEntries));
+  const loadEntries = async () => {
+    try {
+      const response = await fundService.list(currentUser._id, 'travel');
+      setEntries(response.data);
+    } catch (error) {
+      console.error('Erro ao carregar entradas:', error);
+    }
+  };
+
+  const saveEntry = async (newEntry: TravelEntry) => {
+    try {
+      await fundService.create({
+        ...newEntry,
+        category: 'travel'
+      });
+      loadEntries();
+    } catch (error) {
+      console.error('Erro ao salvar entrada:', error);
+    }
   };
   const [formData, setFormData] = useState({
     name: '',
@@ -46,8 +62,7 @@ export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) =
       createdAt: formData.customDate ? new Date(formData.customDate) : new Date()
     };
     
-    const newEntries = [...entries, newEntry];
-    saveEntries(newEntries);
+    await saveEntry(newEntry);
     setFormData({ name: '', description: '', amount: '', customDate: '' });
   };
 

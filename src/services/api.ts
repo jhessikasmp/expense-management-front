@@ -44,3 +44,9 @@ export const travelFundService = {
   update: (id: string, fund: Partial<TravelFund>) => api.put<TravelFund>(`/travel-funds/${id}`, fund),
   delete: (id: string) => api.delete(`/travel-funds/${id}`),
 };
+
+export const fundService = {
+  create: (fund: any) => api.post('/funds', fund),
+  list: (userId?: string, category?: string) => api.get('/funds', { params: { userId, category } }),
+  delete: (id: string) => api.delete(`/funds/${id}`),
+};
