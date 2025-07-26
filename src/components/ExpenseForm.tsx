@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Expense, User } from '../types';
-import { expenseService } from '../services/api';
+import { expenseService, investmentService } from '../services/api';
 
 interface ExpenseFormProps {
   currentUser: User;

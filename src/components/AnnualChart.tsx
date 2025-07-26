@@ -12,7 +12,7 @@ export const AnnualChart: React.FC = () => {
   const { isDark } = useTheme();
 
   useEffect(() => {
-    fetch('http://localhost:4000/api/dashboard/annual')
+    fetch('https://expense-management-back.onrender.com/api/dashboard/annual')
       .then(res => res.json())
       .then(result => setData(result.data))
       .catch(console.error);

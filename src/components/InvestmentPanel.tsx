@@ -17,7 +17,7 @@ export const InvestmentPanel: React.FC = () => {
   const loadInvestments = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:4000/api/dashboard/investments-prices');
+      const response = await fetch('https://expense-management-back.onrender.com/api/dashboard/investments-prices');
       const data = await response.json();
       setInvestments(data);
     } catch (error) {
