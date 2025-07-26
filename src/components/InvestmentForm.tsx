@@ -21,11 +21,14 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ currentUser, onI
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await investmentService.create({
+      const investmentData = {
         ...formData,
-        userId: currentUser._id!,
-        createdAt: formData.customDate ? new Date(formData.customDate) : new Date()
-      });
+        userId: currentUser._id!
+      };
+      
+      // Remove customDate do objeto antes de enviar
+      const { customDate, ...cleanInvestmentData } = investmentData;
+      const response = await investmentService.create(cleanInvestmentData);
       onInvestmentCreated(response.data);
       setFormData({ asset: '', quantity: 0, unitPrice: 0, currency: 'EUR', customDate: '' });
     } catch (error) {

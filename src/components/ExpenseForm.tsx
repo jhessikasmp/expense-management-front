@@ -20,13 +20,16 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ currentUser, onExpense
     e.preventDefault();
     try {
       // Criar despesa normal
-      const response = await expenseService.create({
+      const expenseData = {
         ...formData,
         userId: currentUser._id!,
         amount: -Math.abs(formData.amount),
-        currency: 'EUR',
-        createdAt: formData.customDate ? new Date(formData.customDate) : new Date()
-      });
+        currency: 'EUR'
+      };
+      
+      // Remove customDate do objeto antes de enviar
+      const { customDate, ...cleanExpenseData } = expenseData;
+      const response = await expenseService.create(cleanExpenseData);
 
       // Se for categoria especial, adicionar entrada no fundo correspondente
       await handleSpecialCategory(formData.category, formData.amount, formData.customDate);
@@ -78,8 +81,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ currentUser, onExpense
             asset: 'FUND',
             quantity: 1,
             unitPrice: Math.abs(amount),
-            currency: 'EUR',
-            createdAt: customDate ? new Date(customDate) : new Date()
+            currency: 'EUR'
           });
           break;
       }
