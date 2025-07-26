@@ -133,7 +133,7 @@ export const TravelFundPanel: React.FC<TravelFundPanelProps> = ({ users }) => {
               step="0.01"
               placeholder="Contribuição"
               value={participant.contribution}
-              onChange={(e) => updateParticipant(index, 'contribution', Number(e.target.value))}
+              onChange={(e) => updateParticipant(index, 'contribution', parseFloat(e.target.value) || 0)}
               style={{ ...inputStyle, flex: 1 }}
             />
           </div>

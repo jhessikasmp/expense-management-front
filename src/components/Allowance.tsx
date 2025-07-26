@@ -164,7 +164,7 @@ export const Allowance: React.FC<AllowanceProps> = ({ currentUser }) => {
             step="0.01"
             placeholder="Valor"
             value={formData.amount}
-            onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
+            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
             style={inputStyle}
             required
           />

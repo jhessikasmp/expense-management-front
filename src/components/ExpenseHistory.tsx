@@ -179,7 +179,7 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({ currentUser, onE
                         type="number"
                         step="0.01"
                         value={editForm.amount || 0}
-                        onChange={(e) => setEditForm({ ...editForm, amount: Number(e.target.value) })}
+                        onChange={(e) => setEditForm({ ...editForm, amount: parseFloat(e.target.value) || 0 })}
                         style={inputStyle}
                         placeholder="Valor"
                       />

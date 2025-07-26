@@ -11,8 +11,8 @@ interface InvestmentFormProps {
 export const InvestmentForm: React.FC<InvestmentFormProps> = ({ currentUser, onInvestmentCreated }) => {
   const [formData, setFormData] = useState({
     asset: '',
-    quantity: 0,
-    unitPrice: 0,
+    quantity: '',
+    unitPrice: '',
     currency: 'EUR',
     customDate: ''
   });
@@ -76,7 +76,7 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ currentUser, onI
           step="0.01"
           placeholder="Quantas unidades você possui?"
           value={formData.quantity}
-          onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })}
+          onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
           style={inputStyle}
           required
         />
@@ -90,7 +90,7 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ currentUser, onI
           step="0.01"
           placeholder="Preço que você pagou por unidade"
           value={formData.unitPrice}
-          onChange={(e) => setFormData({ ...formData, unitPrice: Number(e.target.value) })}
+          onChange={(e) => setFormData({ ...formData, unitPrice: e.target.value })}
           style={inputStyle}
           required
         />

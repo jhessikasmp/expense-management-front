@@ -41,12 +41,12 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ currentUser, onExpense
     }
   };
 
-  const handleSpecialCategory = async (category: string, amount: number, customDate: string) => {
+  const handleSpecialCategory = async (category: string, amount: string, customDate: string) => {
     const fundEntry = {
       userId: currentUser._id!,
       name: `Transferência: ${formData.name}`,
       description: `Auto-transferência de despesa: ${formData.description}`,
-      amount: Math.abs(amount),
+      amount: Math.abs(Number(amount)),
       type: 'income' as const,
       createdAt: customDate ? new Date(customDate) : new Date()
     };
