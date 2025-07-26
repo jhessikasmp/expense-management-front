@@ -39,7 +39,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser }) => {
   const totalExpenses = Math.abs(expenses.reduce((sum, expense) => sum + expense.amount, 0));
   const totalInvestments = investments.reduce((sum, inv) => sum + (inv.quantity * inv.unitPrice), 0);
   const totalTravelFunds = travelFunds.reduce((sum, fund) => sum + fund.total, 0);
-  const totalSalaries = users.reduce((sum, user) => sum + user.salary, 0);
+  const totalSalaries = users.reduce((sum, user) => sum + (user.salary || 0), 0);
   const remainingBalance = totalSalaries - totalExpenses;
 
   return (

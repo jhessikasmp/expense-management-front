@@ -2,7 +2,7 @@ export interface User {
   _id?: string;
   name: string;
   email: string;
-  salary: number;
+  salary?: number;
   currency: string;
   createdAt?: Date;
 }
