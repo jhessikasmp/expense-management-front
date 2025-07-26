@@ -4,26 +4,30 @@ import { investmentService } from '../services/api';
 import { useTheme } from './ThemeProvider';
 
 interface InvestmentFormProps {
-  users: User[];
+  currentUser: User;
   onInvestmentCreated: (investment: Investment) => void;
 }
 
-export const InvestmentForm: React.FC<InvestmentFormProps> = ({ users, onInvestmentCreated }) => {
+export const InvestmentForm: React.FC<InvestmentFormProps> = ({ currentUser, onInvestmentCreated }) => {
   const [formData, setFormData] = useState({
-    userId: '',
     asset: '',
     quantity: 0,
     unitPrice: 0,
-    currency: 'EUR'
+    currency: 'EUR',
+    customDate: ''
   });
   const { isDark } = useTheme();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await investmentService.create(formData);
+      const response = await investmentService.create({
+        ...formData,
+        userId: currentUser._id!,
+        createdAt: formData.customDate ? new Date(formData.customDate) : new Date()
+      });
       onInvestmentCreated(response.data);
-      setFormData({ userId: '', asset: '', quantity: 0, unitPrice: 0, currency: 'EUR' });
+      setFormData({ asset: '', quantity: 0, unitPrice: 0, currency: 'EUR', customDate: '' });
     } catch (error) {
       console.error('Erro ao criar investimento:', error);
     }
@@ -47,20 +51,7 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ users, onInvestm
       backgroundColor: isDark ? '#2d2d2d' : '#f8f9fa',
       borderRadius: '8px'
     }}>
-      <h3>Adicionar Investimento</h3>
-      <div>
-        <select
-          value={formData.userId}
-          onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
-          style={inputStyle}
-          required
-        >
-          <option value="">Selecionar Usuário</option>
-          {users.map(user => (
-            <option key={user._id} value={user._id}>{user.name}</option>
-          ))}
-        </select>
-      </div>
+      <h3>Adicionar Investimento - {currentUser.name}</h3>
       <div>
         <input
           type="text"
@@ -110,6 +101,15 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ users, onInvestm
           <option value="GBP">Em que moeda? - GBP</option>
           <option value="BRL">Em que moeda? - BRL</option>
         </select>
+      </div>
+      <div>
+        <input
+          type="date"
+          value={formData.customDate}
+          onChange={(e) => setFormData({ ...formData, customDate: e.target.value })}
+          style={inputStyle}
+          placeholder="Data (opcional - padrão: hoje)"
+        />
       </div>
       <button type="submit" style={{
         padding: '12px 24px',

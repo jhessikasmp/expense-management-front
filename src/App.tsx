@@ -1,37 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { Dashboard } from './components/Dashboard';
-import { UserForm } from './components/UserForm';
+import { Login } from './components/Login';
 import { ExpenseForm } from './components/ExpenseForm';
+import { ExpenseHistory } from './components/ExpenseHistory';
+import { SalaryManager } from './components/SalaryManager';
 import { InvestmentForm } from './components/InvestmentForm';
 import { AnnualChart } from './components/AnnualChart';
 import { InvestmentPanel } from './components/InvestmentPanel';
 import { TravelFundForm } from './components/TravelFundForm';
+import { EmergencyFund } from './components/EmergencyFund';
+import { CarReserve } from './components/CarReserve';
+import { Allowance } from './components/Allowance';
 import { ThemeProvider, useTheme } from './components/ThemeProvider';
 import { User, Expense, Investment } from './types';
-import { userService } from './services/api';
 
 const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [users, setUsers] = useState<User[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const { isDark, toggleTheme } = useTheme();
 
+  const handleLogin = (user: User) => {
+    setCurrentUser(user);
+    localStorage.setItem('currentUser', JSON.stringify(user));
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('currentUser');
+  };
+
   useEffect(() => {
-    loadUsers();
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+    }
   }, []);
 
-  const loadUsers = async () => {
-    try {
-      const response = await userService.list();
-      setUsers(response.data);
-    } catch (error) {
-      console.error('Erro ao carregar usuários:', error);
-    }
-  };
 
-  const handleUserCreated = (user: User) => {
-    setUsers([...users, user]);
-  };
 
   const handleExpenseCreated = (expense: Expense) => {
     console.log('Despesa criada:', expense);
@@ -40,6 +46,10 @@ const AppContent: React.FC = () => {
   const handleInvestmentCreated = (investment: Investment) => {
     console.log('Investimento criado:', investment);
   };
+
+  if (!currentUser) {
+    return <Login onLogin={handleLogin} />;
+  }
 
   const tabStyle = (tab: string) => ({
     padding: '10px 20px',
@@ -74,20 +84,40 @@ const AppContent: React.FC = () => {
         justifyContent: 'space-between',
         alignItems: 'center'
       }}>
-        <h1>Sistema de Gestão Financeira</h1>
-        <button 
-          onClick={toggleTheme}
-          style={{
-            padding: '8px 16px',
-            backgroundColor: 'transparent',
-            color: 'white',
-            border: '1px solid white',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          {isDark ? '☀️ Light' : '🌙 Dark'}
-        </button>
+        <div>
+          <h1>Sistema de Gestão Financeira</h1>
+          <p style={{ margin: '5px 0 0 0', fontSize: '16px', opacity: 0.9 }}>
+            Bem-vindo, {currentUser.name}!
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button 
+            onClick={toggleTheme}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: 'transparent',
+              color: 'white',
+              border: '1px solid white',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            {isDark ? '☀️ Light' : '🌙 Dark'}
+          </button>
+          <button 
+            onClick={handleLogout}
+            style={{
+              padding: '8px 16px',
+              backgroundColor: '#dc3545',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Sair
+          </button>
+        </div>
       </header>
       
       <nav style={{ 
@@ -127,9 +157,7 @@ const AppContent: React.FC = () => {
               <button style={menuItemStyle('dashboard')} onClick={() => { setActiveTab('dashboard'); setMenuOpen(false); }}>
                 📊 Dashboard
               </button>
-              <button style={menuItemStyle('users')} onClick={() => { setActiveTab('users'); setMenuOpen(false); }}>
-                👥 Usuários
-              </button>
+
               <button style={menuItemStyle('expenses')} onClick={() => { setActiveTab('expenses'); setMenuOpen(false); }}>
                 💸 Despesas
               </button>
@@ -138,6 +166,15 @@ const AppContent: React.FC = () => {
               </button>
               <button style={menuItemStyle('travel-funds')} onClick={() => { setActiveTab('travel-funds'); setMenuOpen(false); }}>
                 ✈️ Fundos de Viagem
+              </button>
+              <button style={menuItemStyle('emergency-fund')} onClick={() => { setActiveTab('emergency-fund'); setMenuOpen(false); }}>
+                🆘 Fundo de Emergência
+              </button>
+              <button style={menuItemStyle('car-reserve')} onClick={() => { setActiveTab('car-reserve'); setMenuOpen(false); }}>
+                🚗 Reserva do Carro
+              </button>
+              <button style={menuItemStyle('allowance')} onClick={() => { setActiveTab('allowance'); setMenuOpen(false); }}>
+                💰 Mesada
               </button>
               <button style={menuItemStyle('annual')} onClick={() => { setActiveTab('annual'); setMenuOpen(false); }}>
                 📈 Relatório Anual
@@ -151,9 +188,7 @@ const AppContent: React.FC = () => {
           <button style={tabStyle('dashboard')} onClick={() => setActiveTab('dashboard')}>
             Dashboard
           </button>
-          <button style={tabStyle('users')} onClick={() => setActiveTab('users')}>
-            Usuários
-          </button>
+
           <button style={tabStyle('expenses')} onClick={() => setActiveTab('expenses')}>
             Despesas
           </button>
@@ -163,6 +198,15 @@ const AppContent: React.FC = () => {
           <button style={tabStyle('travel-funds')} onClick={() => setActiveTab('travel-funds')}>
             Fundos de Viagem
           </button>
+          <button style={tabStyle('emergency-fund')} onClick={() => setActiveTab('emergency-fund')}>
+            Fundo de Emergência
+          </button>
+          <button style={tabStyle('car-reserve')} onClick={() => setActiveTab('car-reserve')}>
+            Reserva do Carro
+          </button>
+          <button style={tabStyle('allowance')} onClick={() => setActiveTab('allowance')}>
+            Mesada
+          </button>
           <button style={tabStyle('annual')} onClick={() => setActiveTab('annual')}>
             Relatório Anual
           </button>
@@ -170,36 +214,32 @@ const AppContent: React.FC = () => {
       </nav>
 
       <main style={{ padding: '20px' }}>
-        {activeTab === 'dashboard' && <Dashboard />}
+        {activeTab === 'dashboard' && <Dashboard currentUser={currentUser} />}
         
-        {activeTab === 'users' && (
-          <div>
-            <UserForm onUserCreated={handleUserCreated} />
-            <div>
-              <h3>Lista de Usuários</h3>
-              {users.map(user => (
-                <div key={user._id} style={{ padding: '10px', border: '1px solid #eee', margin: '5px 0' }}>
-                  <strong style={{ fontSize: '18px', color: '#007bff' }}>{user.name}</strong>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+
         
         {activeTab === 'expenses' && (
           <div>
-            <ExpenseForm users={users} onExpenseCreated={handleExpenseCreated} />
+            <SalaryManager currentUser={currentUser} onSalaryUpdated={(user) => setCurrentUser(user)} />
+            <ExpenseForm currentUser={currentUser} onExpenseCreated={handleExpenseCreated} />
+            <ExpenseHistory currentUser={currentUser} onExpenseUpdated={() => {}} />
           </div>
         )}
         
         {activeTab === 'investments' && (
           <div>
-            <InvestmentForm users={users} onInvestmentCreated={handleInvestmentCreated} />
+            <InvestmentForm currentUser={currentUser} onInvestmentCreated={handleInvestmentCreated} />
             <InvestmentPanel />
           </div>
         )}
         
-        {activeTab === 'travel-funds' && <TravelFundForm users={users} />}
+        {activeTab === 'travel-funds' && <TravelFundForm currentUser={currentUser} />}
+        
+        {activeTab === 'emergency-fund' && <EmergencyFund currentUser={currentUser} />}
+        
+        {activeTab === 'car-reserve' && <CarReserve currentUser={currentUser} />}
+        
+        {activeTab === 'allowance' && <Allowance currentUser={currentUser} />}
         
         {activeTab === 'annual' && <AnnualChart />}
       </main>

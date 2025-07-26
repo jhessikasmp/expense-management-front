@@ -3,7 +3,11 @@ import { User, Expense, Investment, TravelFund } from '../types';
 import { userService, expenseService, investmentService, travelFundService } from '../services/api';
 import { useTheme } from './ThemeProvider';
 
-export const Dashboard: React.FC = () => {
+interface DashboardProps {
+  currentUser: User;
+}
+
+export const Dashboard: React.FC<DashboardProps> = ({ currentUser }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [investments, setInvestments] = useState<Investment[]>([]);
@@ -32,9 +36,11 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const totalExpenses = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+  const totalExpenses = Math.abs(expenses.reduce((sum, expense) => sum + expense.amount, 0));
   const totalInvestments = investments.reduce((sum, inv) => sum + (inv.quantity * inv.unitPrice), 0);
   const totalTravelFunds = travelFunds.reduce((sum, fund) => sum + fund.total, 0);
+  const totalSalaries = users.reduce((sum, user) => sum + user.salary, 0);
+  const remainingBalance = totalSalaries - totalExpenses;
 
   return (
     <div style={{ padding: '20px' }}>
@@ -43,14 +49,25 @@ export const Dashboard: React.FC = () => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
         <div style={{ 
           padding: '20px', 
-          backgroundColor: isDark ? '#1e3a8a' : '#f0f8ff', 
+          backgroundColor: isDark ? '#1565c0' : '#e3f2fd', 
           borderRadius: '8px',
           color: isDark ? 'white' : 'black'
         }}>
-          <h3>Usuários</h3>
-          <p style={{ fontSize: '24px', fontWeight: 'bold' }}>{users.length}</p>
+          <h3>Total Salários</h3>
+          <p style={{ fontSize: '24px', fontWeight: 'bold' }}>€{totalSalaries.toFixed(2)}</p>
         </div>
         
+        <div style={{ 
+          padding: '20px', 
+          backgroundColor: remainingBalance >= 0 ? (isDark ? '#166534' : '#d4edda') : (isDark ? '#991b1b' : '#f8d7da'), 
+          borderRadius: '8px',
+          color: isDark ? 'white' : 'black'
+        }}>
+          <h3>Saldo Restante</h3>
+          <p style={{ fontSize: '24px', fontWeight: 'bold', color: remainingBalance >= 0 ? '#28a745' : '#dc3545' }}>
+            €{remainingBalance.toFixed(2)}
+          </p>
+        </div>
         <div style={{ 
           padding: '20px', 
           backgroundColor: isDark ? '#991b1b' : '#ffe4e1', 
@@ -82,29 +99,7 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-        <div>
-          <h3>Despesas Recentes</h3>
-          <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-            {expenses.slice(0, 5).map(expense => (
-              <div key={expense._id} style={{ padding: '10px', borderBottom: '1px solid #eee' }}>
-                <strong>{expense.name}</strong> - €{expense.amount} ({expense.category})
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        <div>
-          <h3>Investimentos</h3>
-          <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-            {investments.slice(0, 5).map(investment => (
-              <div key={investment._id} style={{ padding: '10px', borderBottom: '1px solid #eee' }}>
-                <strong>{investment.asset}</strong> - {investment.quantity} x €{investment.unitPrice}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+
     </div>
   );
 };

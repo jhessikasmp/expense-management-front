@@ -3,43 +3,109 @@ import { Expense, User } from '../types';
 import { expenseService } from '../services/api';
 
 interface ExpenseFormProps {
-  users: User[];
+  currentUser: User;
   onExpenseCreated: (expense: Expense) => void;
 }
 
-export const ExpenseForm: React.FC<ExpenseFormProps> = ({ users, onExpenseCreated }) => {
+export const ExpenseForm: React.FC<ExpenseFormProps> = ({ currentUser, onExpenseCreated }) => {
   const [formData, setFormData] = useState({
-    userId: '',
     name: '',
     description: '',
     amount: 0,
-    category: 'alimentacao'
+    category: 'supermercado',
+    customDate: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      // Criar despesa normal
       const response = await expenseService.create({
         ...formData,
+        userId: currentUser._id!,
         amount: -Math.abs(formData.amount),
-        currency: 'EUR'
+        currency: 'EUR',
+        createdAt: formData.customDate ? new Date(formData.customDate) : new Date()
       });
+
+      // Se for categoria especial, adicionar entrada no fundo correspondente
+      await handleSpecialCategory(formData.category, formData.amount, formData.customDate);
+      
       onExpenseCreated(response.data);
-      setFormData({ userId: '', name: '', description: '', amount: 0, category: 'alimentacao' });
+      setFormData({ name: '', description: '', amount: 0, category: 'supermercado', customDate: '' });
     } catch (error) {
       console.error('Erro ao criar despesa:', error);
     }
   };
 
+  const handleSpecialCategory = async (category: string, amount: number, customDate: string) => {
+    const fundEntry = {
+      userId: currentUser._id!,
+      name: `Transferência: ${formData.name}`,
+      description: `Auto-transferência de despesa: ${formData.description}`,
+      amount: Math.abs(amount),
+      type: 'income' as const,
+      createdAt: customDate ? new Date(customDate) : new Date()
+    };
+
+    try {
+      switch (category) {
+        case 'fundo_viagem':
+          // Adicionar ao localStorage temporariamente (simulando API)
+          const travelEntries = JSON.parse(localStorage.getItem('travelFundEntries') || '[]');
+          travelEntries.push(fundEntry);
+          localStorage.setItem('travelFundEntries', JSON.stringify(travelEntries));
+          break;
+        case 'fundo_emergencia':
+          const emergencyEntries = JSON.parse(localStorage.getItem('emergencyFundEntries') || '[]');
+          emergencyEntries.push(fundEntry);
+          localStorage.setItem('emergencyFundEntries', JSON.stringify(emergencyEntries));
+          break;
+        case 'reserva_carro':
+          const carEntries = JSON.parse(localStorage.getItem('carReserveEntries') || '[]');
+          carEntries.push(fundEntry);
+          localStorage.setItem('carReserveEntries', JSON.stringify(carEntries));
+          break;
+        case 'mesada':
+          const allowanceEntries = JSON.parse(localStorage.getItem('allowanceEntries') || '[]');
+          allowanceEntries.push(fundEntry);
+          localStorage.setItem('allowanceEntries', JSON.stringify(allowanceEntries));
+          break;
+        case 'investimentos':
+          // Para investimentos, criar entrada genérica
+          await investmentService.create({
+            userId: currentUser._id!,
+            asset: 'FUND',
+            quantity: 1,
+            unitPrice: Math.abs(amount),
+            currency: 'EUR',
+            createdAt: customDate ? new Date(customDate) : new Date()
+          });
+          break;
+      }
+    } catch (error) {
+      console.error('Erro ao processar categoria especial:', error);
+    }
+  };
+
   const categories = [
-    { value: 'alimentacao', label: 'Alimentação' },
-    { value: 'transporte', label: 'Transporte' },
-    { value: 'moradia', label: 'Moradia' },
+    { value: 'supermercado', label: 'Supermercado' },
+    { value: 'combustivel', label: 'Combustivel' },
+    { value: 'aluguel', label: 'Aluguel' },
     { value: 'saude', label: 'Saúde' },
-    { value: 'educacao', label: 'Educação' },
-    { value: 'lazer', label: 'Lazer' },
-    { value: 'roupas', label: 'Roupas' },
-    { value: 'outros', label: 'Outros' }
+    { value: 'doacao', label: 'Doação' },
+    { value: 'internet', label: 'Internet' },
+    { value: 'netflix', label: 'NetFlix' },
+    { value: 'xbox', label: 'Xbox' },
+    { value: 'telefone', label: 'Telefone' },
+    { value: 'boleto', label: 'Boletos' },
+    { value: 'cursos', label: 'Cursos' },
+    { value: 'outros', label: 'Outros' },
+    { value: 'fundo_viagem', label: '✈️ Fundo de Viagem' },
+    { value: 'fundo_emergencia', label: '🆘 Fundo de Emergência' },
+    { value: 'reserva_carro', label: '🚗 Reserva do Carro' },
+    { value: 'mesada', label: '💰 Mesada' },
+    { value: 'investimentos', label: '📈 Investimentos' }
   ];
 
   const formStyle = {
@@ -75,20 +141,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ users, onExpenseCreate
 
   return (
     <form onSubmit={handleSubmit} style={formStyle}>
-      <h3 style={{ marginBottom: '20px', color: '#dc3545' }}>Adicionar Despesa</h3>
-      <div>
-        <select
-          value={formData.userId}
-          onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
-          style={inputStyle}
-          required
-        >
-          <option value="">Selecionar Usuário</option>
-          {users.map(user => (
-            <option key={user._id} value={user._id}>{user.name}</option>
-          ))}
-        </select>
-      </div>
+      <h3 style={{ marginBottom: '20px', color: '#dc3545' }}>Adicionar Despesa - {currentUser.name}</h3>
+
       <div>
         <input
           type="text"
@@ -131,6 +185,15 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ users, onExpenseCreate
             <option key={cat.value} value={cat.value}>{cat.label}</option>
           ))}
         </select>
+      </div>
+      <div>
+        <input
+          type="date"
+          value={formData.customDate}
+          onChange={(e) => setFormData({ ...formData, customDate: e.target.value })}
+          style={inputStyle}
+          placeholder="Data (opcional - padrão: hoje)"
+        />
       </div>
       <button type="submit" style={buttonStyle}>Adicionar Despesa</button>
     </form>

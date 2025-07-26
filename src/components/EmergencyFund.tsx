@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { User } from '../types';
 import { useTheme } from './ThemeProvider';
 
-interface TravelEntry {
+interface FundEntry {
   _id?: string;
   userId: string;
   name: string;
@@ -12,21 +12,21 @@ interface TravelEntry {
   createdAt?: Date;
 }
 
-interface TravelFundFormProps {
+interface EmergencyFundProps {
   currentUser: User;
 }
 
-export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) => {
-  const [entries, setEntries] = useState<TravelEntry[]>([]);
+export const EmergencyFund: React.FC<EmergencyFundProps> = ({ currentUser }) => {
+  const [entries, setEntries] = useState<FundEntry[]>([]);
 
   useEffect(() => {
-    const savedEntries = JSON.parse(localStorage.getItem('travelFundEntries') || '[]');
+    const savedEntries = JSON.parse(localStorage.getItem('emergencyFundEntries') || '[]');
     setEntries(savedEntries);
   }, []);
 
-  const saveEntries = (newEntries: TravelEntry[]) => {
+  const saveEntries = (newEntries: FundEntry[]) => {
     setEntries(newEntries);
-    localStorage.setItem('travelFundEntries', JSON.stringify(newEntries));
+    localStorage.setItem('emergencyFundEntries', JSON.stringify(newEntries));
   };
   const [formData, setFormData] = useState({
     name: '',
@@ -39,7 +39,7 @@ export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newEntry: TravelEntry = {
+    const newEntry: FundEntry = {
       ...formData,
       userId: currentUser._id!,
       amount: formData.type === 'expense' ? -Math.abs(formData.amount) : Math.abs(formData.amount),
@@ -58,7 +58,7 @@ export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) =
   const formStyle = {
     marginBottom: '20px',
     padding: '25px',
-    backgroundColor: isDark ? '#2d2d2d' : '#fff8dc',
+    backgroundColor: isDark ? '#2d2d2d' : '#e8f5e8',
     borderRadius: '10px',
     boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
   };
@@ -67,7 +67,7 @@ export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) =
     width: '100%',
     padding: '12px 15px',
     margin: '8px 0',
-    border: `2px solid ${isDark ? '#555' : '#f0e68c'}`,
+    border: `2px solid ${isDark ? '#555' : '#c3e6cb'}`,
     borderRadius: '8px',
     fontSize: '16px',
     backgroundColor: isDark ? '#3d3d3d' : 'white',
@@ -77,8 +77,8 @@ export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) =
   const buttonStyle = {
     width: '100%',
     padding: '12px',
-    backgroundColor: '#ffc107',
-    color: '#212529',
+    backgroundColor: '#28a745',
+    color: 'white',
     border: 'none',
     borderRadius: '8px',
     fontSize: '16px',
@@ -96,7 +96,7 @@ export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) =
       }}>
         <div style={{ 
           padding: '20px', 
-          backgroundColor: isDark ? '#2d4a2d' : '#d4edda',
+          backgroundColor: isDark ? '#166534' : '#d4edda',
           borderRadius: '8px',
           textAlign: 'center'
         }}>
@@ -111,7 +111,7 @@ export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) =
           borderRadius: '8px',
           textAlign: 'center'
         }}>
-          <h4>Entradas Mensais</h4>
+          <h4>Entradas</h4>
           <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#007bff' }}>
             €{totalIncome.toFixed(2)}
           </p>
@@ -122,7 +122,7 @@ export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) =
           borderRadius: '8px',
           textAlign: 'center'
         }}>
-          <h4>Gastos de Viagem</h4>
+          <h4>Gastos</h4>
           <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#dc3545' }}>
             €{totalExpenses.toFixed(2)}
           </p>
@@ -130,25 +130,25 @@ export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) =
       </div>
 
       <form onSubmit={handleSubmit} style={formStyle}>
-        <h3 style={{ marginBottom: '20px', color: isDark ? '#ffc107' : '#856404' }}>
-          Fundo de Viagem - {currentUser.name}
+        <h3 style={{ marginBottom: '20px', color: isDark ? '#28a745' : '#155724' }}>
+          Fundo de Emergência - {currentUser.name}
         </h3>
-
+        
         <div>
           <select
             value={formData.type}
             onChange={(e) => setFormData({ ...formData, type: e.target.value as 'income' | 'expense' })}
             style={inputStyle}
           >
-            <option value="income">Entrada Mensal (+)</option>
-            <option value="expense">Gasto de Viagem (-)</option>
+            <option value="income">Entrada (+)</option>
+            <option value="expense">Gasto de Emergência (-)</option>
           </select>
         </div>
 
         <div>
           <input
             type="text"
-            placeholder="Nome (ex: Contribuição Mensal, Hotel, Passagem)"
+            placeholder="Nome (ex: Reserva Mensal, Conserto Urgente)"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             style={inputStyle}

@@ -13,6 +13,7 @@ const api = axios.create({
 export const userService = {
   create: (user: Omit<User, '_id' | 'createdAt'>) => api.post<User>('/users', user),
   list: () => api.get<User[]>('/users'),
+  update: (id: string, user: Partial<User>) => api.put<User>(`/users/${id}`, user),
 };
 
 export const expenseService = {
