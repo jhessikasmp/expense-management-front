@@ -35,9 +35,11 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         }
       }
     } catch (error: any) {
-      console.error('Erro:', error);
-      const errorMessage = error.response?.data?.error || 'Erro ao processar solicitação';
-      alert(errorMessage);
+      console.error('Erro completo:', error);
+      console.error('Response:', error.response);
+      console.error('Response data:', error.response?.data);
+      const errorMessage = error.response?.data?.error || error.message || 'Erro ao processar solicitação';
+      alert(`Erro: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
