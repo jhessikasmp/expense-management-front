@@ -31,8 +31,7 @@ export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    amount: 0,
-    type: 'income' as 'income' | 'expense',
+    amount: '',
     customDate: ''
   });
   const { isDark } = useTheme();
@@ -42,13 +41,14 @@ export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
     const newEntry: FundEntry = {
       ...formData,
       userId: currentUser._id!,
-      amount: formData.type === 'expense' ? -Math.abs(formData.amount) : Math.abs(formData.amount),
+      type: 'expense',
+      amount: -Math.abs(Number(formData.amount)),
       createdAt: formData.customDate ? new Date(formData.customDate) : new Date()
     };
     
     const newEntries = [...entries, newEntry];
     saveEntries(newEntries);
-    setFormData({ name: '', description: '', amount: 0, type: 'income', customDate: '' });
+    setFormData({ name: '', description: '', amount: '', customDate: '' });
   };
 
   const totalBalance = entries.reduce((sum, entry) => sum + entry.amount, 0);
@@ -134,16 +134,7 @@ export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
           Reserva do Carro - {currentUser.name}
         </h3>
         
-        <div>
-          <select
-            value={formData.type}
-            onChange={(e) => setFormData({ ...formData, type: e.target.value as 'income' | 'expense' })}
-            style={inputStyle}
-          >
-            <option value="income">Entrada (+)</option>
-            <option value="expense">Gasto do Carro (-)</option>
-          </select>
-        </div>
+
 
         <div>
           <input
@@ -186,11 +177,13 @@ export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
             onChange={(e) => setFormData({ ...formData, customDate: e.target.value })}
             style={inputStyle}
             placeholder="Data (opcional - padrão: hoje)"
+            min="2020-01-01"
+            max="2030-12-31"
           />
         </div>
 
         <button type="submit" style={buttonStyle}>
-          {formData.type === 'income' ? 'Adicionar Entrada' : 'Adicionar Gasto'}
+          Adicionar Gasto do Carro
         </button>
       </form>
 

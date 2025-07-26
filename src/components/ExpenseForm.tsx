@@ -11,7 +11,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ currentUser, onExpense
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    amount: 0,
+    amount: '',
     category: 'supermercado',
     customDate: ''
   });
@@ -23,7 +23,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ currentUser, onExpense
       const expenseData = {
         ...formData,
         userId: currentUser._id!,
-        amount: -Math.abs(formData.amount),
+        amount: -Math.abs(Number(formData.amount)),
         currency: 'EUR'
       };
       
@@ -35,7 +35,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ currentUser, onExpense
       await handleSpecialCategory(formData.category, formData.amount, formData.customDate);
       
       onExpenseCreated(response.data);
-      setFormData({ name: '', description: '', amount: 0, category: 'supermercado', customDate: '' });
+      setFormData({ name: '', description: '', amount: '', category: 'supermercado', customDate: '' });
     } catch (error) {
       console.error('Erro ao criar despesa:', error);
     }
@@ -75,14 +75,14 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ currentUser, onExpense
           localStorage.setItem('allowanceEntries', JSON.stringify(allowanceEntries));
           break;
         case 'investimentos':
-          // Para investimentos, criar entrada genérica
-          await investmentService.create({
-            userId: currentUser._id!,
-            asset: 'FUND',
-            quantity: 1,
-            unitPrice: Math.abs(amount),
-            currency: 'EUR'
+          // Para investimentos, apenas salvar no localStorage como entrada
+          const investmentEntries = JSON.parse(localStorage.getItem('investmentFundEntries') || '[]');
+          investmentEntries.push({
+            ...fundEntry,
+            name: `Reserva para Investimentos: ${formData.name}`,
+            description: `Valor reservado para investimentos: ${formData.description}`
           });
+          localStorage.setItem('investmentFundEntries', JSON.stringify(investmentEntries));
           break;
       }
     } catch (error) {
@@ -158,11 +158,10 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ currentUser, onExpense
       <div>
         <input
           type="text"
-          placeholder="Descrição da despesa"
+          placeholder="Descrição da despesa (opcional)"
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
           style={inputStyle}
-          required
         />
       </div>
       <div>
@@ -171,7 +170,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ currentUser, onExpense
           step="0.01"
           placeholder="Valor (será automaticamente negativo)"
           value={formData.amount}
-          onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
+          onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
           style={inputStyle}
           required
         />
@@ -195,6 +194,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ currentUser, onExpense
           onChange={(e) => setFormData({ ...formData, customDate: e.target.value })}
           style={inputStyle}
           placeholder="Data (opcional - padrão: hoje)"
+          min="2020-01-01"
+          max="2030-12-31"
         />
       </div>
       <button type="submit" style={buttonStyle}>Adicionar Despesa</button>

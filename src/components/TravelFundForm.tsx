@@ -31,8 +31,7 @@ export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) =
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    amount: 0,
-    type: 'income' as 'income' | 'expense',
+    amount: '',
     customDate: ''
   });
   const { isDark } = useTheme();
@@ -42,13 +41,14 @@ export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) =
     const newEntry: TravelEntry = {
       ...formData,
       userId: currentUser._id!,
-      amount: formData.type === 'expense' ? -Math.abs(formData.amount) : Math.abs(formData.amount),
+      type: 'expense',
+      amount: -Math.abs(Number(formData.amount)),
       createdAt: formData.customDate ? new Date(formData.customDate) : new Date()
     };
     
     const newEntries = [...entries, newEntry];
     saveEntries(newEntries);
-    setFormData({ name: '', description: '', amount: 0, type: 'income', customDate: '' });
+    setFormData({ name: '', description: '', amount: '', customDate: '' });
   };
 
   const totalBalance = entries.reduce((sum, entry) => sum + entry.amount, 0);
@@ -134,16 +134,7 @@ export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) =
           Fundo de Viagem - {currentUser.name}
         </h3>
 
-        <div>
-          <select
-            value={formData.type}
-            onChange={(e) => setFormData({ ...formData, type: e.target.value as 'income' | 'expense' })}
-            style={inputStyle}
-          >
-            <option value="income">Entrada Mensal (+)</option>
-            <option value="expense">Gasto de Viagem (-)</option>
-          </select>
-        </div>
+
 
         <div>
           <input
@@ -173,7 +164,7 @@ export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) =
             step="0.01"
             placeholder="Valor"
             value={formData.amount}
-            onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
+            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
             style={inputStyle}
             required
           />
@@ -186,11 +177,13 @@ export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) =
             onChange={(e) => setFormData({ ...formData, customDate: e.target.value })}
             style={inputStyle}
             placeholder="Data (opcional - padrão: hoje)"
+            min="2020-01-01"
+            max="2030-12-31"
           />
         </div>
 
         <button type="submit" style={buttonStyle}>
-          {formData.type === 'income' ? 'Adicionar Entrada' : 'Adicionar Gasto'}
+          Adicionar Gasto de Viagem
         </button>
       </form>
 

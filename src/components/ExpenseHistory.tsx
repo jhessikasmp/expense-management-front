@@ -206,9 +206,11 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({ currentUser, onE
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <strong>{expense.name}</strong>
-                      <p style={{ margin: '5px 0', fontSize: '14px', color: isDark ? '#ccc' : '#666' }}>
-                        {expense.description}
-                      </p>
+                      {expense.description && (
+                        <p style={{ margin: '5px 0', fontSize: '14px', color: isDark ? '#ccc' : '#666' }}>
+                          {expense.description}
+                        </p>
+                      )}
                       <small style={{ color: isDark ? '#aaa' : '#888' }}>
                         {categories.find(c => c.value === expense.category)?.label}
                       </small>
@@ -252,9 +254,11 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({ currentUser, onE
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <strong>{expense.name}</strong>
-                        <p style={{ margin: '5px 0', fontSize: '14px', color: isDark ? '#ccc' : '#666' }}>
-                          {expense.description}
-                        </p>
+                        {expense.description && (
+                          <p style={{ margin: '5px 0', fontSize: '14px', color: isDark ? '#ccc' : '#666' }}>
+                            {expense.description}
+                          </p>
+                        )}
                         <small style={{ color: isDark ? '#aaa' : '#888' }}>
                           {categories.find(c => c.value === expense.category)?.label}
                         </small>

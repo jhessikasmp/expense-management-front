@@ -23,14 +23,16 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ currentUser, onI
     try {
       const investmentData = {
         ...formData,
-        userId: currentUser._id!
+        userId: currentUser._id!,
+        quantity: Number(formData.quantity),
+        unitPrice: Number(formData.unitPrice)
       };
       
       // Remove customDate do objeto antes de enviar
       const { customDate, ...cleanInvestmentData } = investmentData;
       const response = await investmentService.create(cleanInvestmentData);
       onInvestmentCreated(response.data);
-      setFormData({ asset: '', quantity: 0, unitPrice: 0, currency: 'EUR', customDate: '' });
+      setFormData({ asset: '', quantity: '', unitPrice: '', currency: 'EUR', customDate: '' });
     } catch (error) {
       console.error('Erro ao criar investimento:', error);
     }
@@ -112,6 +114,8 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ currentUser, onI
           onChange={(e) => setFormData({ ...formData, customDate: e.target.value })}
           style={inputStyle}
           placeholder="Data (opcional - padrão: hoje)"
+          min="2020-01-01"
+          max="2030-12-31"
         />
       </div>
       <button type="submit" style={{

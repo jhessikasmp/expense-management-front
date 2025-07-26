@@ -11,7 +11,7 @@ export interface Expense {
   _id?: string;
   userId: string;
   name: string;
-  description: string;
+  description?: string;
   amount: number;
   category: string;
   currency: string;

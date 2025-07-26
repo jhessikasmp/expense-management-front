@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User } from '../types';
-import { userService } from '../services/api';
+import { userService, salaryService } from '../services/api';
 import { useTheme } from './ThemeProvider';
 
 interface SalaryManagerProps {
@@ -9,7 +9,7 @@ interface SalaryManagerProps {
 }
 
 export const SalaryManager: React.FC<SalaryManagerProps> = ({ currentUser, onSalaryUpdated }) => {
-  const [salary, setSalary] = useState(currentUser.salary);
+  const [salary, setSalary] = useState(currentUser.salary || '');
   const [loading, setLoading] = useState(false);
   const { isDark } = useTheme();
 
@@ -18,8 +18,23 @@ export const SalaryManager: React.FC<SalaryManagerProps> = ({ currentUser, onSal
     setLoading(true);
     
     try {
-      const response = await userService.update(currentUser._id!, { salary });
+      const currentDate = new Date();
+      const month = currentDate.getMonth() + 1;
+      const year = currentDate.getFullYear();
+      
+      // Adicionar salário mensal ao histórico
+      await salaryService.add({
+        userId: currentUser._id!,
+        amount: Number(salary),
+        month,
+        year
+      });
+      
+      // Atualizar salário atual do usuário
+      const response = await userService.update(currentUser._id!, { salary: Number(salary) });
       onSalaryUpdated(response.data);
+      
+      alert('Salário adicionado ao histórico mensal!');
     } catch (error) {
       console.error('Erro ao atualizar salário:', error);
     } finally {
@@ -74,7 +89,7 @@ export const SalaryManager: React.FC<SalaryManagerProps> = ({ currentUser, onSal
           step="0.01"
           placeholder="Digite seu salário mensal"
           value={salary}
-          onChange={(e) => setSalary(Number(e.target.value))}
+          onChange={(e) => setSalary(e.target.value)}
           style={inputStyle}
           required
         />

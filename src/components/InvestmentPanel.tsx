@@ -27,9 +27,10 @@ export const InvestmentPanel: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    loadInvestments();
-  }, []);
+  // Remover carregamento automático - apenas no clique do botão
+  // useEffect(() => {
+  //   loadInvestments();
+  // }, []);
 
   const totalInvested = investments.reduce((sum, inv) => sum + (inv.quantity * inv.unitPrice), 0);
   const totalCurrent = investments.reduce((sum, inv) => sum + inv.totalValue, 0);

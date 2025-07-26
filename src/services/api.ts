@@ -16,6 +16,11 @@ export const userService = {
   update: (id: string, user: Partial<User>) => api.put<User>(`/users/${id}`, user),
 };
 
+export const salaryService = {
+  add: (salary: { userId: string; amount: number; month: number; year: number }) => api.post('/salaries', salary),
+  getAnnual: (year: number) => api.get(`/salaries/annual/${year}`),
+};
+
 export const expenseService = {
   create: (expense: Omit<Expense, '_id' | 'createdAt'>) => api.post<Expense>('/expenses', expense),
   list: (userId?: string) => api.get<Expense[]>('/expenses', { params: { userId } }),
