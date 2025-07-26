@@ -10,6 +10,8 @@ interface MonthlyData {
 export const AnnualChart: React.FC = () => {
   const [data, setData] = useState<MonthlyData[]>([]);
   const [salaries, setSalaries] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
+  const [expenses, setExpenses] = useState<any[]>([]);
   const { isDark } = useTheme();
 
   useEffect(() => {
@@ -25,6 +27,18 @@ export const AnnualChart: React.FC = () => {
     fetch(`https://expense-management-back.onrender.com/api/salaries/annual/${currentYear}`)
       .then(res => res.json())
       .then(result => setSalaries(result))
+      .catch(console.error);
+    
+    // Carregar usuários
+    fetch('https://expense-management-back.onrender.com/api/users')
+      .then(res => res.json())
+      .then(result => setUsers(result))
+      .catch(console.error);
+    
+    // Carregar despesas
+    fetch('https://expense-management-back.onrender.com/api/expenses')
+      .then(res => res.json())
+      .then(result => setExpenses(result))
       .catch(console.error);
   }, []);
 
@@ -59,6 +73,51 @@ export const AnnualChart: React.FC = () => {
           <p style={{ fontSize: '20px', fontWeight: 'bold', color: balance >= 0 ? '#28a745' : '#dc3545' }}>
             €{balance.toFixed(2)}
           </p>
+        </div>
+      </div>
+      
+      <div style={{ marginBottom: '30px' }}>
+        <h4>Resumo por Usuário</h4>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+          {users.map(user => {
+            const userSalaries = salaries.filter(s => s.userId === user._id).reduce((sum, s) => sum + s.amount, 0);
+            const userExpenses = Math.abs(expenses.filter(e => e.userId === user._id).reduce((sum, e) => sum + e.amount, 0));
+            const userBalance = userSalaries - userExpenses;
+            
+            return (
+              <div key={user._id} style={{
+                padding: '20px',
+                backgroundColor: isDark ? '#3d3d3d' : 'white',
+                borderRadius: '8px',
+                border: `1px solid ${isDark ? '#555' : '#ddd'}`
+              }}>
+                <h5 style={{ marginBottom: '15px', color: isDark ? '#fff' : '#333' }}>{user.name}</h5>
+                <div style={{ marginBottom: '10px' }}>
+                  <span style={{ fontSize: '14px', color: isDark ? '#ccc' : '#666' }}>Salários Anuais:</span>
+                  <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#007bff', margin: '5px 0' }}>
+                    €{userSalaries.toFixed(2)}
+                  </p>
+                </div>
+                <div style={{ marginBottom: '10px' }}>
+                  <span style={{ fontSize: '14px', color: isDark ? '#ccc' : '#666' }}>Despesas Anuais:</span>
+                  <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#dc3545', margin: '5px 0' }}>
+                    €{userExpenses.toFixed(2)}
+                  </p>
+                </div>
+                <div>
+                  <span style={{ fontSize: '14px', color: isDark ? '#ccc' : '#666' }}>Saldo Final:</span>
+                  <p style={{ 
+                    fontSize: '20px', 
+                    fontWeight: 'bold', 
+                    color: userBalance >= 0 ? '#28a745' : '#dc3545',
+                    margin: '5px 0'
+                  }}>
+                    €{userBalance.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
       

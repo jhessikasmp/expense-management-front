@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Expense, User } from '../types';
-import { expenseService } from '../services/api';
+import { expenseService, userService } from '../services/api';
 import { useTheme } from './ThemeProvider';
 
 interface ExpenseHistoryProps {
@@ -15,6 +15,7 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({ currentUser, onE
   const [editForm, setEditForm] = useState<Partial<Expense>>({});
   const [activeTab, setActiveTab] = useState<'current' | 'previous'>('current');
   const [selectedMonth, setSelectedMonth] = useState<string>('');
+  const [users, setUsers] = useState<User[]>([]);
   const { isDark } = useTheme();
 
   useEffect(() => {
@@ -23,8 +24,12 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({ currentUser, onE
 
   const loadExpenses = async () => {
     try {
-      const response = await expenseService.list();
-      const expenses = response.data;
+      const [expensesRes, usersRes] = await Promise.all([
+        expenseService.list(),
+        userService.list()
+      ]);
+      const expenses = expensesRes.data;
+      setUsers(usersRes.data);
       
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
@@ -107,6 +112,7 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({ currentUser, onE
     { value: 'xbox', label: 'Xbox' },
     { value: 'telefone', label: 'Telefone' },
     { value: 'boleto', label: 'Boletos' },
+    { value: 'financiamento', label: 'Financiamento' },
     { value: 'cursos', label: 'Cursos' },
     { value: 'outros', label: 'Outros' },
     { value: 'fundo_viagem', label: '✈️ Fundo de Viagem' },
@@ -214,7 +220,7 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({ currentUser, onE
                         </p>
                       )}
                       <small style={{ color: isDark ? '#aaa' : '#888' }}>
-                        {categories.find(c => c.value === expense.category)?.label}
+                        {categories.find(c => c.value === expense.category)?.label} • {users.find(u => u._id === expense.userId)?.name || 'Usuário'}
                       </small>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -283,7 +289,7 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({ currentUser, onE
                             </p>
                           )}
                           <small style={{ color: isDark ? '#aaa' : '#888' }}>
-                            {categories.find(c => c.value === expense.category)?.label}
+                            {categories.find(c => c.value === expense.category)?.label} • {users.find(u => u._id === expense.userId)?.name || 'Usuário'}
                           </small>
                         </div>
                         <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#dc3545' }}>
