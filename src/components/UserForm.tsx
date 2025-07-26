@@ -20,8 +20,10 @@ export const UserForm: React.FC<UserFormProps> = ({ onUserCreated }) => {
       });
       onUserCreated(response.data);
       setFormData({ name: '' });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao criar usuário:', error);
+      const errorMessage = error.response?.data?.error || 'Erro ao criar usuário';
+      alert(errorMessage);
     }
   };
 

@@ -34,9 +34,10 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
           alert('Usuário não encontrado. Clique em "Registrar" para criar uma conta.');
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro:', error);
-      alert('Erro ao processar solicitação');
+      const errorMessage = error.response?.data?.error || 'Erro ao processar solicitação';
+      alert(errorMessage);
     } finally {
       setLoading(false);
     }
