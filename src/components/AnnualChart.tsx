@@ -29,10 +29,11 @@ export const AnnualChart: React.FC = () => {
   }, []);
 
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-  const maxExpense = Math.max(...data.map(d => d.expenses));
+  const maxExpense = Math.max(...data.map(d => Math.abs(d.expenses)));
 
+  const currentMonth = new Date().getMonth() + 1;
   const totalSalaries = salaries.reduce((sum, salary) => sum + salary.amount, 0);
-  const totalExpenses = data.reduce((sum, expense) => sum + expense.expenses, 0);
+  const totalExpenses = Math.abs(data.reduce((sum, expense) => sum + expense.expenses, 0));
   const balance = totalSalaries - totalExpenses;
 
   return (
@@ -46,15 +47,15 @@ export const AnnualChart: React.FC = () => {
       
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
         <div style={{ padding: '15px', backgroundColor: isDark ? '#1565c0' : '#e3f2fd', borderRadius: '6px', textAlign: 'center' }}>
-          <h4>Total Salários</h4>
+          <h4>Salário Anual (até agora)</h4>
           <p style={{ fontSize: '20px', fontWeight: 'bold' }}>€{totalSalaries.toFixed(2)}</p>
         </div>
         <div style={{ padding: '15px', backgroundColor: isDark ? '#991b1b' : '#ffe4e1', borderRadius: '6px', textAlign: 'center' }}>
-          <h4>Total Despesas</h4>
+          <h4>Despesas Anuais (até agora)</h4>
           <p style={{ fontSize: '20px', fontWeight: 'bold' }}>€{totalExpenses.toFixed(2)}</p>
         </div>
         <div style={{ padding: '15px', backgroundColor: balance >= 0 ? (isDark ? '#166534' : '#d4edda') : (isDark ? '#991b1b' : '#f8d7da'), borderRadius: '6px', textAlign: 'center' }}>
-          <h4>Saldo Anual</h4>
+          <h4>Saldo Anual (restante)</h4>
           <p style={{ fontSize: '20px', fontWeight: 'bold', color: balance >= 0 ? '#28a745' : '#dc3545' }}>
             €{balance.toFixed(2)}
           </p>
@@ -71,7 +72,7 @@ export const AnnualChart: React.FC = () => {
             flex: 1
           }}>
             <div style={{
-              height: `${(item.expenses / maxExpense) * 150}px`,
+              height: `${(Math.abs(item.expenses) / maxExpense) * 150}px`,
               backgroundColor: isDark ? '#4a90e2' : '#007bff',
               width: '100%',
               borderRadius: '4px 4px 0 0',
@@ -81,7 +82,7 @@ export const AnnualChart: React.FC = () => {
               {months[index]}
             </small>
             <small style={{ fontSize: '10px', color: isDark ? '#ccc' : '#666' }}>
-              €{item.expenses.toFixed(0)}
+              €{Math.abs(item.expenses).toFixed(0)}
             </small>
           </div>
         ))}

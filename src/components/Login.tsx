@@ -22,8 +22,6 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
       if (isRegistering) {
         const response = await userService.create({
           name: name.trim(),
-          email: `${name.toLowerCase().replace(' ', '')}@email.com`,
-          salary: 0,
           currency: 'EUR'
         });
         onLogin(response.data);

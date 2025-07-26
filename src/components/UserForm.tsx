@@ -16,7 +16,6 @@ export const UserForm: React.FC<UserFormProps> = ({ onUserCreated }) => {
     try {
       const response = await userService.create({
         ...formData,
-        email: `${formData.name.toLowerCase().replace(' ', '')}@email.com`,
         currency: 'EUR'
       });
       onUserCreated(response.data);

@@ -9,7 +9,7 @@ interface SalaryManagerProps {
 }
 
 export const SalaryManager: React.FC<SalaryManagerProps> = ({ currentUser, onSalaryUpdated }) => {
-  const [salary, setSalary] = useState(currentUser.salary || '');
+  const [salary, setSalary] = useState('');
   const [loading, setLoading] = useState(false);
   const { isDark } = useTheme();
 
@@ -30,9 +30,8 @@ export const SalaryManager: React.FC<SalaryManagerProps> = ({ currentUser, onSal
         year
       });
       
-      // Atualizar salário atual do usuário
-      const response = await userService.update(currentUser._id!, { salary: Number(salary) });
-      onSalaryUpdated(response.data);
+      // Salário agora é gerenciado apenas no histórico mensal
+      onSalaryUpdated(currentUser);
       
       alert('Salário adicionado ao histórico mensal!');
     } catch (error) {

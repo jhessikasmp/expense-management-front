@@ -39,8 +39,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser }) => {
   const totalExpenses = Math.abs(expenses.reduce((sum, expense) => sum + expense.amount, 0));
   const totalInvestments = investments.reduce((sum, inv) => sum + (inv.quantity * inv.unitPrice), 0);
   const totalTravelFunds = travelFunds.reduce((sum, fund) => sum + fund.total, 0);
-  const totalSalaries = users.reduce((sum, user) => sum + (user.salary || 0), 0);
-  const remainingBalance = totalSalaries - totalExpenses;
+  // Salários agora são gerenciados separadamente via API /salaries
+  const remainingBalance = -totalExpenses; // Apenas despesas por enquanto
 
   return (
     <div style={{ padding: '20px' }}>
@@ -49,28 +49,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser }) => {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '30px' }}>
         <div style={{ 
           padding: '20px', 
-          backgroundColor: isDark ? '#1565c0' : '#e3f2fd', 
-          borderRadius: '8px',
-          color: isDark ? 'white' : 'black'
-        }}>
-          <h3>Total Salários</h3>
-          <p style={{ fontSize: '24px', fontWeight: 'bold' }}>€{totalSalaries.toFixed(2)}</p>
-        </div>
-        
-        <div style={{ 
-          padding: '20px', 
-          backgroundColor: remainingBalance >= 0 ? (isDark ? '#166534' : '#d4edda') : (isDark ? '#991b1b' : '#f8d7da'), 
-          borderRadius: '8px',
-          color: isDark ? 'white' : 'black'
-        }}>
-          <h3>Saldo Restante</h3>
-          <p style={{ fontSize: '24px', fontWeight: 'bold', color: remainingBalance >= 0 ? '#28a745' : '#dc3545' }}>
-            €{remainingBalance.toFixed(2)}
-          </p>
-        </div>
-        <div style={{ 
-          padding: '20px', 
-          backgroundColor: isDark ? '#991b1b' : '#ffe4e1', 
+          backgroundColor: isDark ? '#991b1b' : '#f8d7da', 
           borderRadius: '8px',
           color: isDark ? 'white' : 'black'
         }}>

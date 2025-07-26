@@ -1,8 +1,6 @@
 export interface User {
   _id?: string;
   name: string;
-  email: string;
-  salary?: number;
   currency: string;
   createdAt?: Date;
 }
@@ -25,6 +23,7 @@ export interface Investment {
   quantity: number;
   unitPrice: number;
   currency: string;
+  description?: string;
   createdAt?: Date;
 }
 

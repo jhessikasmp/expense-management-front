@@ -85,7 +85,7 @@ const AppContent: React.FC = () => {
         alignItems: 'center'
       }}>
         <div>
-          <h1>Sistema de Gestão Financeira</h1>
+          <h1>JS FinceApp</h1>
           <p style={{ margin: '5px 0 0 0', fontSize: '16px', opacity: 0.9 }}>
             Bem-vindo, {currentUser.name}!
           </p>

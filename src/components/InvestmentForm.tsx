@@ -14,6 +14,7 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ currentUser, onI
     quantity: '',
     unitPrice: '',
     currency: 'EUR',
+    description: '',
     customDate: ''
   });
   const { isDark } = useTheme();
@@ -32,7 +33,7 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ currentUser, onI
       const { customDate, ...cleanInvestmentData } = investmentData;
       const response = await investmentService.create(cleanInvestmentData);
       onInvestmentCreated(response.data);
-      setFormData({ asset: '', quantity: '', unitPrice: '', currency: 'EUR', customDate: '' });
+      setFormData({ asset: '', quantity: '', unitPrice: '', currency: 'EUR', description: '', customDate: '' });
     } catch (error) {
       console.error('Erro ao criar investimento:', error);
     }
@@ -93,6 +94,15 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ currentUser, onI
           onChange={(e) => setFormData({ ...formData, unitPrice: e.target.value })}
           style={inputStyle}
           required
+        />
+      </div>
+      <div>
+        <input
+          type="text"
+          placeholder="Descrição (opcional)"
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          style={inputStyle}
         />
       </div>
       <div>
