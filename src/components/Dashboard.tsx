@@ -22,6 +22,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser }) => {
   const loadData = async () => {
     try {
       const currentYear = new Date().getFullYear();
+      const currentMonth = new Date().getMonth() + 1;
+      
       const [usersRes, expensesRes, investmentsRes, fundsRes, salariesRes] = await Promise.all([
         userService.list(),
         expenseService.list(),
@@ -30,8 +32,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser }) => {
         salaryService.getAnnual(currentYear)
       ]);
       
+      // Filtrar despesas apenas do mês atual
+      const monthlyExpenses = expensesRes.data.filter(expense => {
+        const expenseDate = new Date(expense.createdAt!);
+        return expenseDate.getMonth() + 1 === currentMonth && expenseDate.getFullYear() === currentYear;
+      });
+      
       setUsers(usersRes.data);
-      setExpenses(expensesRes.data);
+      setExpenses(monthlyExpenses);
       setInvestments(investmentsRes.data);
       setTravelFunds(fundsRes.data);
       setMonthlySalaries(salariesRes.data);

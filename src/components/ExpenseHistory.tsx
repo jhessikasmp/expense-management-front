@@ -14,6 +14,7 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({ currentUser, onE
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Expense>>({});
   const [activeTab, setActiveTab] = useState<'current' | 'previous'>('current');
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
   const { isDark } = useTheme();
 
   useEffect(() => {
@@ -102,6 +103,7 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({ currentUser, onE
     { value: 'doacao', label: 'Doação' },
     { value: 'internet', label: 'Internet' },
     { value: 'netflix', label: 'NetFlix' },
+    { value: 'amazon_prime', label: 'Amazon Prime' },
     { value: 'xbox', label: 'Xbox' },
     { value: 'telefone', label: 'Telefone' },
     { value: 'boleto', label: 'Boletos' },
@@ -240,37 +242,59 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({ currentUser, onE
           {Object.keys(previousMonthsExpenses).length === 0 ? (
             <p style={{ color: isDark ? '#ccc' : '#666' }}>Nenhuma despesa em meses anteriores</p>
           ) : (
-            Object.entries(previousMonthsExpenses).map(([monthLabel, expenses]) => (
-              <div key={monthLabel} style={{ marginBottom: '30px' }}>
-                <h4 style={{ color: isDark ? '#fff' : '#333', marginBottom: '15px' }}>{monthLabel}</h4>
-                {expenses.map(expense => (
-                  <div key={expense._id} style={{
-                    padding: '15px',
-                    backgroundColor: isDark ? '#3d3d3d' : 'white',
-                    borderRadius: '8px',
-                    marginBottom: '10px',
-                    border: `1px solid ${isDark ? '#555' : '#ddd'}`
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <strong>{expense.name}</strong>
-                        {expense.description && (
-                          <p style={{ margin: '5px 0', fontSize: '14px', color: isDark ? '#ccc' : '#666' }}>
-                            {expense.description}
-                          </p>
-                        )}
-                        <small style={{ color: isDark ? '#aaa' : '#888' }}>
-                          {categories.find(c => c.value === expense.category)?.label}
-                        </small>
-                      </div>
-                      <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#dc3545' }}>
-                        €{Math.abs(expense.amount).toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
+            <div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px' }}>
+                {Object.keys(previousMonthsExpenses).map(monthLabel => (
+                  <button
+                    key={monthLabel}
+                    onClick={() => setSelectedMonth(selectedMonth === monthLabel ? '' : monthLabel)}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: selectedMonth === monthLabel ? '#007bff' : (isDark ? '#3d3d3d' : '#f8f9fa'),
+                      color: selectedMonth === monthLabel ? 'white' : (isDark ? '#fff' : '#000'),
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px'
+                    }}
+                  >
+                    {monthLabel}
+                  </button>
                 ))}
               </div>
-            ))
+              
+              {selectedMonth && previousMonthsExpenses[selectedMonth] && (
+                <div>
+                  <h4 style={{ color: isDark ? '#fff' : '#333', marginBottom: '15px' }}>{selectedMonth}</h4>
+                  {previousMonthsExpenses[selectedMonth].map(expense => (
+                    <div key={expense._id} style={{
+                      padding: '15px',
+                      backgroundColor: isDark ? '#3d3d3d' : 'white',
+                      borderRadius: '8px',
+                      marginBottom: '10px',
+                      border: `1px solid ${isDark ? '#555' : '#ddd'}`
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <strong>{expense.name}</strong>
+                          {expense.description && (
+                            <p style={{ margin: '5px 0', fontSize: '14px', color: isDark ? '#ccc' : '#666' }}>
+                              {expense.description}
+                            </p>
+                          )}
+                          <small style={{ color: isDark ? '#aaa' : '#888' }}>
+                            {categories.find(c => c.value === expense.category)?.label}
+                          </small>
+                        </div>
+                        <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#dc3545' }}>
+                          €{Math.abs(expense.amount).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}

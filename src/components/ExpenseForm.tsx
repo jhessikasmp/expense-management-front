@@ -98,6 +98,7 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ currentUser, onExpense
     { value: 'doacao', label: 'Doação' },
     { value: 'internet', label: 'Internet' },
     { value: 'netflix', label: 'NetFlix' },
+    { value: 'amazon_prime', label: 'Amazon Prime' },
     { value: 'xbox', label: 'Xbox' },
     { value: 'telefone', label: 'Telefone' },
     { value: 'boleto', label: 'Boletos' },
