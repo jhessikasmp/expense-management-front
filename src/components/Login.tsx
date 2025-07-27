@@ -50,12 +50,13 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: isDark ? '#1a1a1a' : '#f5f5f5'
+    backgroundColor: isDark ? '#1a1a1a' : '#f5f5f5',
+    padding: '20px'
   };
 
   const formStyle = {
     backgroundColor: isDark ? '#2d2d2d' : 'white',
-    padding: '40px',
+    padding: window.innerWidth <= 768 ? '20px' : '40px',
     borderRadius: '12px',
     boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
     width: '100%',
@@ -96,9 +97,38 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   return (
     <div style={containerStyle}>
       <form onSubmit={handleSubmit} style={formStyle}>
-        <h2 style={{ marginBottom: '30px', color: isDark ? 'white' : '#333' }}>
-          {isRegistering ? 'Criar Conta' : 'Entrar'}
-        </h2>
+        <div style={{ marginBottom: '30px' }}>
+          <div style={{
+            width: '80px',
+            height: '80px',
+            backgroundColor: '#007bff',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 20px',
+            fontSize: '32px',
+            fontWeight: 'bold',
+            color: 'white'
+          }}>
+            JS
+          </div>
+          <h1 style={{ 
+            margin: '0 0 10px 0', 
+            color: isDark ? 'white' : '#333',
+            fontSize: window.innerWidth <= 768 ? '24px' : '28px'
+          }}>
+            JS FinanceApp
+          </h1>
+          <h2 style={{ 
+            margin: '0 0 20px 0', 
+            color: isDark ? '#ccc' : '#666',
+            fontSize: window.innerWidth <= 768 ? '18px' : '20px',
+            fontWeight: 'normal'
+          }}>
+            {isRegistering ? 'Criar Conta' : 'Entrar'}
+          </h2>
+        </div>
         
         <input
           type="text"

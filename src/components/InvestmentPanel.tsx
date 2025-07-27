@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Investment } from '../types';
+import { investmentService } from '../services/api';
 import { useTheme } from './ThemeProvider';
 
 interface InvestmentWithPrice extends Investment {
@@ -14,23 +15,37 @@ export const InvestmentPanel: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const { isDark } = useTheme();
 
-  const loadInvestments = async () => {
+  const loadBasicInvestments = async () => {
+    try {
+      const response = await investmentService.list();
+      const investmentsData = response.data.map((inv: Investment) => ({
+        ...inv,
+        currentPrice: inv.unitPrice,
+        totalValue: inv.quantity * inv.unitPrice,
+        profit: 0
+      }));
+      setInvestments(investmentsData);
+    } catch (error) {
+      console.error('Erro ao carregar investimentos:', error);
+    }
+  };
+
+  const updatePrices = async () => {
     setLoading(true);
     try {
       const response = await fetch('https://expense-management-back.onrender.com/api/dashboard/investments-prices');
       const data = await response.json();
       setInvestments(data);
     } catch (error) {
-      console.error('Erro ao carregar investimentos:', error);
+      console.error('Erro ao atualizar preços:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Remover carregamento automático - apenas no clique do botão
-  // useEffect(() => {
-  //   loadInvestments();
-  // }, []);
+  useEffect(() => {
+    loadBasicInvestments();
+  }, []);
 
   const totalInvested = investments.reduce((sum, inv) => sum + (inv.quantity * inv.unitPrice), 0);
   const totalCurrent = investments.reduce((sum, inv) => sum + inv.totalValue, 0);
@@ -46,7 +61,7 @@ export const InvestmentPanel: React.FC = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h3>Investimentos</h3>
         <button 
-          onClick={loadInvestments} 
+          onClick={updatePrices} 
           disabled={loading}
           style={{
             padding: '8px 16px',
@@ -108,23 +123,16 @@ export const InvestmentPanel: React.FC = () => {
               <div>
                 <strong>{investment.asset}</strong>
                 <p style={{ margin: '5px 0', fontSize: '14px', color: isDark ? '#ccc' : '#666' }}>
-                  {investment.quantity} unidades × €{investment.unitPrice}
+                  {investment.quantity} unidades × €{investment.unitPrice} | {investment.description}
                 </p>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <p style={{ margin: '0', fontSize: '16px', fontWeight: 'bold' }}>
                   €{investment.totalValue.toFixed(2)}
                 </p>
-                <p style={{ 
-                  margin: '5px 0 0 0', 
-                  fontSize: '14px',
-                  color: investment.profit >= 0 ? '#28a745' : '#dc3545'
-                }}>
-                  {investment.profit >= 0 ? '+' : ''}€{investment.profit.toFixed(2)}
-                </p>
-                {investment.error && (
-                  <small style={{ color: '#ffc107' }}>{investment.error}</small>
-                )}
+                <small style={{ color: isDark ? '#aaa' : '#888' }}>
+                  {new Date(investment.createdAt!).toLocaleDateString('pt-BR')}
+                </small>
               </div>
             </div>
           </div>

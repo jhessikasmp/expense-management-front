@@ -59,7 +59,7 @@ export const AnnualChart: React.FC = () => {
     }}>
       <h3>Relatório Anual 2025</h3>
       
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 768 ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
         <div style={{ padding: '15px', backgroundColor: isDark ? '#1565c0' : '#e3f2fd', borderRadius: '6px', textAlign: 'center' }}>
           <h4>Salário Anual (até agora)</h4>
           <p style={{ fontSize: '20px', fontWeight: 'bold' }}>€{totalSalaries.toFixed(2)}</p>
@@ -78,7 +78,7 @@ export const AnnualChart: React.FC = () => {
       
       <div style={{ marginBottom: '30px' }}>
         <h4>Resumo por Usuário</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 768 ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
           {users.map(user => {
             const userSalaries = salaries.filter(s => s.userId === user._id).reduce((sum, s) => sum + s.amount, 0);
             const userExpenses = Math.abs(expenses.filter(e => e.userId === user._id).reduce((sum, e) => sum + e.amount, 0));
@@ -122,7 +122,14 @@ export const AnnualChart: React.FC = () => {
       </div>
       
       <h4>Gastos Mensais</h4>
-      <div style={{ display: 'flex', alignItems: 'end', gap: '10px', height: '200px' }}>
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'end', 
+        gap: window.innerWidth <= 768 ? '5px' : '10px', 
+        height: '200px',
+        overflowX: window.innerWidth <= 768 ? 'auto' : 'visible',
+        minWidth: window.innerWidth <= 768 ? '600px' : 'auto'
+      }}>
         {data.map((item, index) => (
           <div key={item.month} style={{ 
             display: 'flex', 
