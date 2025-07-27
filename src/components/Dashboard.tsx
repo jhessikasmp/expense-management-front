@@ -32,8 +32,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser }) => {
         salaryService.getAnnual(currentYear)
       ]);
       
-      // Admin users veem todos os dados
-      const isAdmin = ['Jhessika', 'Antonio'].includes(currentUser.name);
+      // Admin users veem todos os dados (IDs específicos)
+      const adminIds = ['6884f1b07f0be3c02772d85c', '6884f319e268d1d9a7613530']; // Antonio e Jhessika
+      const isAdmin = adminIds.includes(currentUser._id!);
       
       // Filtrar despesas apenas do mês atual
       const allMonthlyExpenses = expensesRes.data.filter(expense => {

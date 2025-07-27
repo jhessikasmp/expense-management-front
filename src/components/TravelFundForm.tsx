@@ -26,7 +26,8 @@ export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) =
 
   const loadEntries = async () => {
     try {
-      const isAdmin = ['Jhessika', 'Antonio'].includes(currentUser.name);
+      const adminIds = ['6884f1b07f0be3c02772d85c', '6884f319e268d1d9a7613530']; // Antonio e Jhessika
+      const isAdmin = adminIds.includes(currentUser._id!);
       if (isAdmin) {
         const response = await fundService.list('', 'travel');
         setEntries(response.data);
