@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Expense, User } from '../types';
-import { expenseService, investmentService } from '../services/api';
+import { expenseService, fundService } from '../services/api';
 
 interface ExpenseFormProps {
   currentUser: User;
@@ -52,38 +52,32 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ currentUser, onExpense
     };
 
     try {
+      let fundCategory = '';
       switch (category) {
         case 'fundo_viagem':
-          // Adicionar ao localStorage temporariamente (simulando API)
-          const travelEntries = JSON.parse(localStorage.getItem('travelFundEntries') || '[]');
-          travelEntries.push(fundEntry);
-          localStorage.setItem('travelFundEntries', JSON.stringify(travelEntries));
+          fundCategory = 'travel';
           break;
         case 'fundo_emergencia':
-          const emergencyEntries = JSON.parse(localStorage.getItem('emergencyFundEntries') || '[]');
-          emergencyEntries.push(fundEntry);
-          localStorage.setItem('emergencyFundEntries', JSON.stringify(emergencyEntries));
+          fundCategory = 'emergency';
           break;
         case 'reserva_carro':
-          const carEntries = JSON.parse(localStorage.getItem('carReserveEntries') || '[]');
-          carEntries.push(fundEntry);
-          localStorage.setItem('carReserveEntries', JSON.stringify(carEntries));
+          fundCategory = 'car';
           break;
         case 'mesada':
-          const allowanceEntries = JSON.parse(localStorage.getItem('allowanceEntries') || '[]');
-          allowanceEntries.push(fundEntry);
-          localStorage.setItem('allowanceEntries', JSON.stringify(allowanceEntries));
+          fundCategory = 'allowance';
           break;
         case 'investimentos':
-          // Para investimentos, apenas salvar no localStorage como entrada
-          const investmentEntries = JSON.parse(localStorage.getItem('investmentFundEntries') || '[]');
-          investmentEntries.push({
-            ...fundEntry,
-            name: `Reserva para Investimentos: ${formData.name}`,
-            description: `Valor reservado para investimentos: ${formData.description}`
-          });
-          localStorage.setItem('investmentFundEntries', JSON.stringify(investmentEntries));
+          fundCategory = 'investment';
+          fundEntry.name = `Reserva para Investimentos: ${formData.name}`;
+          fundEntry.description = `Valor reservado para investimentos: ${formData.description}`;
           break;
+      }
+      
+      if (fundCategory) {
+        await fundService.create({
+          ...fundEntry,
+          category: fundCategory
+        });
       }
     } catch (error) {
       console.error('Erro ao processar categoria especial:', error);
