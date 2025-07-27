@@ -16,6 +16,7 @@ export const InvestmentPanel: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<any>({});
   const [monthlyInvestments, setMonthlyInvestments] = useState<any[]>([]);
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('');
   const { isDark } = useTheme();
 
   const loadBasicInvestments = async () => {
@@ -98,19 +99,21 @@ export const InvestmentPanel: React.FC = () => {
     loadBasicInvestments();
   }, []);
 
-  const totalsByCurrency = investments.reduce((acc, inv) => {
-    const currency = inv.currency || 'EUR';
-    if (!acc[currency]) acc[currency] = { monthlyInvested: 0, currentValue: 0 };
-    acc[currency].currentValue += inv.totalValue;
-    return acc;
-  }, {} as Record<string, { monthlyInvested: number; currentValue: number }>);
+  // Converter tudo para EUR (cotações aproximadas)
+  const convertToEUR = (amount: number, currency: string) => {
+    const rates = { EUR: 1, USD: 0.85, BRL: 0.17, GBP: 1.15 };
+    return amount * (rates[currency as keyof typeof rates] || 1);
+  };
   
-  // Adicionar aportes mensais por moeda
-  monthlyInvestments.forEach(expense => {
-    const currency = expense.currency || 'EUR';
-    if (!totalsByCurrency[currency]) totalsByCurrency[currency] = { monthlyInvested: 0, currentValue: 0 };
-    totalsByCurrency[currency].monthlyInvested += Math.abs(expense.amount);
-  });
+  const totalMonthlyInvestedEUR = monthlyInvestments.reduce((sum, expense) => {
+    return sum + convertToEUR(Math.abs(expense.amount), expense.currency || 'EUR');
+  }, 0);
+  
+  const totalCurrentValueEUR = investments.reduce((sum, inv) => {
+    return sum + convertToEUR(inv.totalValue, inv.currency || 'EUR');
+  }, 0);
+  
+  const totalProfitEUR = totalCurrentValueEUR - totalMonthlyInvestedEUR;
 
   return (
     <div style={{ 
@@ -138,31 +141,39 @@ export const InvestmentPanel: React.FC = () => {
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
-        {Object.entries(totalsByCurrency).map(([currency, totals]) => {
-          const profit = totals.currentValue - totals.monthlyInvested;
-          const symbol = currency === 'BRL' ? 'R$' : currency === 'USD' ? '$' : currency === 'GBP' ? '£' : '€';
-          
-          return (
-            <div key={currency} style={{ 
-              padding: '15px', 
-              backgroundColor: isDark ? '#3d3d3d' : '#f8f9fa',
-              borderRadius: '6px',
-              border: `2px solid ${currency === 'EUR' ? '#007bff' : currency === 'USD' ? '#28a745' : currency === 'GBP' ? '#6f42c1' : '#ffc107'}`
-            }}>
-              <h4>{currency}</h4>
-              <p style={{ fontSize: '14px', margin: '5px 0' }}>Aportes Mensais: {symbol}{totals.monthlyInvested.toFixed(2)}</p>
-              <p style={{ fontSize: '14px', margin: '5px 0' }}>Valor Atual: {symbol}{totals.currentValue.toFixed(2)}</p>
-              <p style={{ 
-                fontSize: '16px', 
-                fontWeight: 'bold',
-                color: profit >= 0 ? '#28a745' : '#dc3545',
-                margin: '5px 0'
-              }}>
-                {profit >= 0 ? 'Lucro: +' : 'Prejuízo: '}{symbol}{Math.abs(profit).toFixed(2)}
-              </p>
-            </div>
-          );
-        })}
+        <div style={{ 
+          padding: '15px', 
+          backgroundColor: isDark ? '#3d3d3d' : '#e3f2fd',
+          borderRadius: '6px',
+          textAlign: 'center'
+        }}>
+          <h4>Aportes Mensais</h4>
+          <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#007bff' }}>€{totalMonthlyInvestedEUR.toFixed(2)}</p>
+        </div>
+        <div style={{ 
+          padding: '15px', 
+          backgroundColor: isDark ? '#3d3d3d' : '#e8f5e8',
+          borderRadius: '6px',
+          textAlign: 'center'
+        }}>
+          <h4>Valor Atual</h4>
+          <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#28a745' }}>€{totalCurrentValueEUR.toFixed(2)}</p>
+        </div>
+        <div style={{ 
+          padding: '15px', 
+          backgroundColor: totalProfitEUR >= 0 ? (isDark ? '#2d4a2d' : '#d4edda') : (isDark ? '#4a2d2d' : '#f8d7da'),
+          borderRadius: '6px',
+          textAlign: 'center'
+        }}>
+          <h4>Lucro/Prejuízo</h4>
+          <p style={{ 
+            fontSize: '20px', 
+            fontWeight: 'bold',
+            color: totalProfitEUR >= 0 ? '#28a745' : '#dc3545'
+          }}>
+            {totalProfitEUR >= 0 ? '+' : ''}€{totalProfitEUR.toFixed(2)}
+          </p>
+        </div>
       </div>
 
       <div>
@@ -172,86 +183,116 @@ export const InvestmentPanel: React.FC = () => {
             Nenhum investimento encontrado. Verifique se os dados foram inseridos na collection 'investments'.
           </p>
         ) : (
-          investments.map(investment => (
-          <div key={investment._id} style={{ 
-            padding: '15px', 
-            backgroundColor: isDark ? '#3d3d3d' : 'white',
-            borderRadius: '6px',
-            marginBottom: '10px',
-            border: `1px solid ${isDark ? '#555' : '#ddd'}`
-          }}>
-            {editingId === investment._id ? (
-              <div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
-                  <input
-                    type="text"
-                    value={editForm.asset || ''}
-                    onChange={(e) => setEditForm({ ...editForm, asset: e.target.value })}
-                    style={{ padding: '8px', borderRadius: '4px', border: `1px solid ${isDark ? '#555' : '#ddd'}`, backgroundColor: isDark ? '#2d2d2d' : 'white', color: isDark ? 'white' : 'black' }}
-                    placeholder="Ativo"
-                  />
-                  <input
-                    type="text"
-                    value={editForm.description || ''}
-                    onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
-                    style={{ padding: '8px', borderRadius: '4px', border: `1px solid ${isDark ? '#555' : '#ddd'}`, backgroundColor: isDark ? '#2d2d2d' : 'white', color: isDark ? 'white' : 'black' }}
-                    placeholder="Descrição"
-                  />
-                  <input
-                    type="number"
-                    value={editForm.quantity || 0}
-                    onChange={(e) => setEditForm({ ...editForm, quantity: Number(e.target.value) })}
-                    style={{ padding: '8px', borderRadius: '4px', border: `1px solid ${isDark ? '#555' : '#ddd'}`, backgroundColor: isDark ? '#2d2d2d' : 'white', color: isDark ? 'white' : 'black' }}
-                    placeholder="Quantidade"
-                  />
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={editForm.unitPrice || 0}
-                    onChange={(e) => setEditForm({ ...editForm, unitPrice: Number(e.target.value) })}
-                    style={{ padding: '8px', borderRadius: '4px', border: `1px solid ${isDark ? '#555' : '#ddd'}`, backgroundColor: isDark ? '#2d2d2d' : 'white', color: isDark ? 'white' : 'black' }}
-                    placeholder="Preço unitário"
-                  />
-                </div>
-                <div>
-                  <button onClick={handleUpdate} style={{ marginRight: '10px', padding: '5px 10px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px' }}>
-                    Salvar
+          <div>
+            {Object.entries(
+              investments.reduce((acc, inv) => {
+                let type = 'Outros';
+                if (inv.asset.includes('BTC') || inv.asset.includes('ETH') || inv.asset.includes('BNB') || inv.asset.includes('SOL') || inv.asset.includes('NEAR')) {
+                  type = 'Criptomoedas';
+                } else if (inv.description?.toLowerCase().includes('etf') || inv.asset.includes('VWCE') || inv.asset.includes('GLUX') || inv.asset.includes('HLQD')) {
+                  type = 'ETFs';
+                } else if (inv.description?.toLowerCase().includes('fundo') || inv.description?.toLowerCase().includes('fund')) {
+                  type = 'Fundos';
+                } else if (inv.description?.toLowerCase().includes('ação') || inv.asset.includes('ODPV3')) {
+                  type = 'Ações';
+                }
+                if (!acc[type]) acc[type] = [];
+                acc[type].push(inv);
+                return acc;
+              }, {} as Record<string, InvestmentWithPrice[]>)
+            ).map(([type, typeInvestments]) => {
+              const isOpen = selectedCurrency === type;
+              const totalValueEUR = typeInvestments.reduce((sum, inv) => sum + convertToEUR(inv.totalValue, inv.currency || 'EUR'), 0);
+              
+              return (
+                <div key={type} style={{
+                  marginBottom: '10px',
+                  border: `1px solid ${isDark ? '#555' : '#ddd'}`,
+                  borderRadius: '8px',
+                  overflow: 'hidden'
+                }}>
+                  <button
+                    onClick={() => setSelectedCurrency(isOpen ? '' : type)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 15px',
+                      backgroundColor: isDark ? '#3d3d3d' : '#f8f9fa',
+                      color: isDark ? '#fff' : '#000',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      fontSize: '14px',
+                      fontWeight: '500'
+                    }}
+                  >
+                    <span>{type} ({typeInvestments.length} ativos)</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 'bold' }}>
+                        €{totalValueEUR.toFixed(2)}
+                      </span>
+                      <span style={{ fontSize: '10px' }}>
+                        {isOpen ? '▲' : '▼'}
+                      </span>
+                    </div>
                   </button>
-                  <button onClick={() => setEditingId(null)} style={{ padding: '5px 10px', backgroundColor: '#6c757d', color: 'white', border: 'none', borderRadius: '4px' }}>
-                    Cancelar
-                  </button>
+                  
+                  {isOpen && (
+                    <div style={{
+                      padding: '10px',
+                      backgroundColor: isDark ? '#2d2d2d' : 'white',
+                      borderTop: `1px solid ${isDark ? '#555' : '#ddd'}`
+                    }}>
+                      {typeInvestments.map(investment => {
+                        const symbol = investment.currency === 'BRL' ? 'R$' : investment.currency === 'USD' ? '$' : investment.currency === 'GBP' ? '£' : '€';
+                        return (
+                          <div key={investment._id} style={{
+                            padding: '8px 10px',
+                            backgroundColor: isDark ? '#3d3d3d' : '#f8f9fa',
+                            borderRadius: '4px',
+                            marginBottom: '5px',
+                            border: `1px solid ${isDark ? '#555' : '#e9ecef'}`,
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                          }}>                          
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: '14px', fontWeight: '500' }}>{investment.asset}</div>
+                              <div style={{ fontSize: '12px', color: isDark ? '#ccc' : '#666', margin: '2px 0' }}>
+                                {investment.quantity} × {symbol}{investment.unitPrice}
+                              </div>
+                              <div style={{ fontSize: '11px', color: isDark ? '#aaa' : '#888' }}>
+                                {investment.description}
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '14px', fontWeight: 'bold' }}>
+                                  {symbol}{investment.totalValue.toFixed(2)}
+                                </div>
+                                <div style={{ fontSize: '10px', color: isDark ? '#aaa' : '#888' }}>
+                                  {new Date(investment.createdAt!).toLocaleDateString('pt-BR')}
+                                </div>
+                              </div>
+                              <div>
+                                <button onClick={() => handleEdit(investment)} style={{ marginRight: '3px', padding: '3px 6px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '3px', fontSize: '11px' }}>
+                                  ✏️
+                                </button>
+                                <button onClick={() => handleDelete(investment._id!)} style={{ padding: '3px 6px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '3px', fontSize: '11px' }}>
+                                  🗑️
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ) : (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <strong>{investment.asset}</strong>
-                  <p style={{ margin: '5px 0', fontSize: '14px', color: isDark ? '#ccc' : '#666' }}>
-                    {investment.quantity} unidades × {investment.currency === 'BRL' ? 'R$' : investment.currency === 'USD' ? '$' : investment.currency === 'GBP' ? '£' : '€'}{investment.unitPrice} | {investment.description}
-                  </p>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                  <div style={{ textAlign: 'right' }}>
-                    <p style={{ margin: '0', fontSize: '16px', fontWeight: 'bold' }}>
-                      {investment.currency === 'BRL' ? 'R$' : investment.currency === 'USD' ? '$' : investment.currency === 'GBP' ? '£' : '€'}{investment.totalValue.toFixed(2)}
-                    </p>
-                    <small style={{ color: isDark ? '#aaa' : '#888' }}>
-                      {new Date(investment.createdAt!).toLocaleDateString('pt-BR')}
-                    </small>
-                  </div>
-                  <div>
-                    <button onClick={() => handleEdit(investment)} style={{ marginRight: '5px', padding: '5px 10px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px' }}>
-                      Editar
-                    </button>
-                    <button onClick={() => handleDelete(investment._id!)} style={{ padding: '5px 10px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px' }}>
-                      Excluir
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+              );
+            })}
           </div>
-          ))
         )}
       </div>
     </div>

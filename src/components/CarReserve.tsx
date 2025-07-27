@@ -50,6 +50,7 @@ export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
     amount: '',
     customDate: ''
   });
+  const [selectedType, setSelectedType] = useState<string>('');
   const { isDark } = useTheme();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -204,41 +205,83 @@ export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
 
       <div>
         <h3>Histórico</h3>
-        {entries.map((entry, index) => (
-          <div key={index} style={{ 
-            padding: '15px', 
-            backgroundColor: isDark ? '#3d3d3d' : 'white',
-            borderRadius: '6px',
-            marginBottom: '10px',
-            border: `1px solid ${isDark ? '#555' : '#ddd'}`,
-            borderLeft: `4px solid ${entry.amount > 0 ? '#2196f3' : '#dc3545'}`
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <strong>{entry.name}</strong>
-                <p style={{ margin: '5px 0', fontSize: '14px', color: isDark ? '#ccc' : '#666' }}>
-                  {entry.description}
-                </p>
-                <small style={{ color: isDark ? '#aaa' : '#888' }}>
-                  {currentUser.name}
-                </small>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <p style={{ 
-                  margin: '0', 
-                  fontSize: '18px', 
-                  fontWeight: 'bold',
-                  color: entry.amount > 0 ? '#2196f3' : '#dc3545'
+        {['Entradas', 'Saídas'].map(type => {
+          const typeEntries = entries.filter(entry => 
+            type === 'Entradas' ? entry.amount > 0 : entry.amount < 0
+          );
+          const isOpen = selectedType === type;
+          const totalType = typeEntries.reduce((sum, entry) => sum + Math.abs(entry.amount), 0);
+          
+          return (
+            <div key={type} style={{
+              marginBottom: '10px',
+              border: `1px solid ${isDark ? '#555' : '#ddd'}`,
+              borderRadius: '8px',
+              overflow: 'hidden'
+            }}>
+              <button
+                onClick={() => setSelectedType(isOpen ? '' : type)}
+                style={{
+                  width: '100%',
+                  padding: '10px 15px',
+                  backgroundColor: isDark ? '#3d3d3d' : '#f8f9fa',
+                  color: isDark ? '#fff' : '#000',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                <span>{type} ({typeEntries.length})</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 'bold', color: type === 'Entradas' ? '#2196f3' : '#dc3545' }}>
+                    €{totalType.toFixed(2)}
+                  </span>
+                  <span style={{ fontSize: '10px' }}>
+                    {isOpen ? '▲' : '▼'}
+                  </span>
+                </div>
+              </button>
+              
+              {isOpen && (
+                <div style={{
+                  padding: '10px',
+                  backgroundColor: isDark ? '#2d2d2d' : 'white',
+                  borderTop: `1px solid ${isDark ? '#555' : '#ddd'}`
                 }}>
-                  {entry.amount > 0 ? '+' : ''}€{entry.amount.toFixed(2)}
-                </p>
-                <small style={{ color: entry.amount > 0 ? '#2196f3' : '#dc3545' }}>
-                  {entry.amount > 0 ? 'Entrada' : 'Gasto'}
-                </small>
-              </div>
+                  {typeEntries.map((entry, index) => (
+                    <div key={index} style={{
+                      padding: '8px 10px',
+                      backgroundColor: isDark ? '#3d3d3d' : '#f8f9fa',
+                      borderRadius: '4px',
+                      marginBottom: '5px',
+                      border: `1px solid ${isDark ? '#555' : '#e9ecef'}`,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>                          
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '14px', fontWeight: '500' }}>{entry.name}</div>
+                        <div style={{ fontSize: '12px', color: isDark ? '#ccc' : '#666', margin: '2px 0' }}>
+                          {entry.description}
+                        </div>
+                        <div style={{ fontSize: '11px', color: isDark ? '#aaa' : '#888' }}>
+                          {currentUser.name}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: '14px', fontWeight: 'bold', color: entry.amount > 0 ? '#2196f3' : '#dc3545', marginLeft: '10px' }}>
+                        {entry.amount > 0 ? '+' : ''}€{entry.amount.toFixed(2)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

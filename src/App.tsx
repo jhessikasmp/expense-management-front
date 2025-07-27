@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dashboard } from './components/Dashboard';
 import { Login } from './components/Login';
 import { ExpenseForm } from './components/ExpenseForm';
@@ -18,15 +18,25 @@ const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const { isDark, toggleTheme } = useTheme();
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);
+    localStorage.setItem('currentUser', JSON.stringify(user));
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
+    localStorage.removeItem('currentUser');
   };
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+    }
+  }, []);
 
 
 
@@ -212,8 +222,8 @@ const AppContent: React.FC = () => {
         {activeTab === 'expenses' && (
           <div>
             <SalaryManager currentUser={currentUser} onSalaryUpdated={(user) => setCurrentUser(user)} />
-            <ExpenseForm currentUser={currentUser} onExpenseCreated={handleExpenseCreated} />
-            <ExpenseHistory currentUser={currentUser} onExpenseUpdated={() => {}} />
+            <ExpenseForm currentUser={currentUser} onExpenseCreated={() => setRefreshKey(prev => prev + 1)} />
+            <ExpenseHistory key={refreshKey} currentUser={currentUser} onExpenseUpdated={() => setRefreshKey(prev => prev + 1)} />
           </div>
         )}
         

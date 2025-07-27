@@ -219,9 +219,14 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({ currentUser, onE
                           {expense.description}
                         </p>
                       )}
-                      <small style={{ color: isDark ? '#aaa' : '#888' }}>
-                        {categories.find(c => c.value === expense.category)?.label} • {users.find(u => u._id === expense.userId)?.name || 'Usuário'}
-                      </small>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '5px' }}>
+                        <small style={{ color: isDark ? '#aaa' : '#888' }}>
+                          {categories.find(c => c.value === expense.category)?.label} • {users.find(u => u._id === expense.userId)?.name || 'Usuário'}
+                        </small>
+                        <small style={{ color: isDark ? '#999' : '#777', fontSize: '11px' }}>
+                          {new Date(expense.createdAt!).toLocaleDateString('pt-BR')}
+                        </small>
+                      </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <span style={{ fontSize: '18px', fontWeight: 'bold', color: '#dc3545' }}>
