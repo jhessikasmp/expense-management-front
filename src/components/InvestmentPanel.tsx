@@ -17,13 +17,19 @@ export const InvestmentPanel: React.FC = () => {
 
   const loadBasicInvestments = async () => {
     try {
+      console.log('Carregando investimentos...');
       const response = await investmentService.list();
+      console.log('Response:', response);
+      console.log('Data:', response.data);
+      
       const investmentsData = response.data.map((inv: Investment) => ({
         ...inv,
         currentPrice: inv.unitPrice,
         totalValue: inv.quantity * inv.unitPrice,
         profit: 0
       }));
+      
+      console.log('Investments processed:', investmentsData);
       setInvestments(investmentsData);
     } catch (error) {
       console.error('Erro ao carregar investimentos:', error);
@@ -111,7 +117,12 @@ export const InvestmentPanel: React.FC = () => {
 
       <div>
         <h4>Detalhes dos Investimentos</h4>
-        {investments.map(investment => (
+        {investments.length === 0 ? (
+          <p style={{ color: isDark ? '#ccc' : '#666', textAlign: 'center', padding: '20px' }}>
+            Nenhum investimento encontrado. Verifique se os dados foram inseridos na collection 'investments'.
+          </p>
+        ) : (
+          investments.map(investment => (
           <div key={investment._id} style={{ 
             padding: '15px', 
             backgroundColor: isDark ? '#3d3d3d' : 'white',
@@ -136,7 +147,8 @@ export const InvestmentPanel: React.FC = () => {
               </div>
             </div>
           </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
