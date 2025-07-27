@@ -24,7 +24,8 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ currentUser, onExpense
         ...formData,
         userId: currentUser._id!,
         amount: -Math.abs(Number(formData.amount)),
-        currency: 'EUR'
+        currency: 'EUR',
+        createdAt: formData.customDate ? new Date(formData.customDate) : new Date()
       };
       
       // Remove customDate do objeto antes de enviar
