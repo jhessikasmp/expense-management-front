@@ -32,17 +32,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser }) => {
         salaryService.getAnnual(currentYear)
       ]);
       
+      // Admin users veem todos os dados
+      const isAdmin = ['Jhessika', 'Antonio'].includes(currentUser.name);
+      
       // Filtrar despesas apenas do mês atual
-      const monthlyExpenses = expensesRes.data.filter(expense => {
+      const allMonthlyExpenses = expensesRes.data.filter(expense => {
         const expenseDate = new Date(expense.createdAt!);
         return expenseDate.getMonth() + 1 === currentMonth && expenseDate.getFullYear() === currentYear;
       });
       
+      const monthlyExpenses = isAdmin ? allMonthlyExpenses : allMonthlyExpenses.filter(expense => expense.userId === currentUser._id);
+      const userInvestments = isAdmin ? investmentsRes.data : investmentsRes.data.filter(inv => inv.userId === currentUser._id);
+      const userFunds = fundsRes.data;
+      const userSalaries = isAdmin ? salariesRes.data : salariesRes.data.filter((salary: any) => salary.userId === currentUser._id);
+      
       setUsers(usersRes.data);
       setExpenses(monthlyExpenses);
-      setInvestments(investmentsRes.data);
-      setTravelFunds(fundsRes.data);
-      setMonthlySalaries(salariesRes.data);
+      setInvestments(userInvestments);
+      setTravelFunds(userFunds);
+      setMonthlySalaries(userSalaries);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     }

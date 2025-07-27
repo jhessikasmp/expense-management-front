@@ -26,8 +26,14 @@ export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) =
 
   const loadEntries = async () => {
     try {
-      const response = await fundService.list(currentUser._id, 'travel');
-      setEntries(response.data);
+      const isAdmin = ['Jhessika', 'Antonio'].includes(currentUser.name);
+      if (isAdmin) {
+        const response = await fundService.list('', 'travel');
+        setEntries(response.data);
+      } else {
+        const response = await fundService.list(currentUser._id, 'travel');
+        setEntries(response.data);
+      }
     } catch (error) {
       console.error('Erro ao carregar entradas:', error);
     }

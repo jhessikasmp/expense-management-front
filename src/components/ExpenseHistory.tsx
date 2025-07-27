@@ -34,13 +34,17 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({ currentUser, onE
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
       
-      const current = expenses.filter(expense => {
+      // Admin users veem todos os dados
+      const isAdmin = ['Jhessika', 'Antonio'].includes(currentUser.name);
+      const userExpenses = isAdmin ? expenses : expenses.filter(expense => expense.userId === currentUser._id);
+      
+      const current = userExpenses.filter(expense => {
         const expenseDate = new Date(expense.createdAt!);
         return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
       });
       
       const previous: { [key: string]: Expense[] } = {};
-      expenses.filter(expense => {
+      userExpenses.filter(expense => {
         const expenseDate = new Date(expense.createdAt!);
         return !(expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear);
       }).forEach(expense => {
