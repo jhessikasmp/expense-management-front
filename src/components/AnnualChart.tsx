@@ -15,14 +15,11 @@ export const AnnualChart: React.FC = () => {
   const { isDark } = useTheme();
 
   useEffect(() => {
-    // Sempre usar o ano 2025, independentemente do ano atual
-    const targetYear = 2025;
-    
-    // Carregar dados de despesas
+    // Carregar dados de despesas para o gráfico (filtrar por 2025 para o gráfico de barras)
     fetch('https://expense-management-back.onrender.com/api/dashboard/annual')
       .then(res => res.json())
       .then(result => {
-        // Filtrar apenas dados de 2025
+        // Filtrar apenas dados de 2025 para o gráfico
         const data2025 = result.data.filter((monthData: any) => {
           // O mês está no formato numérico (1-12), então precisamos criar uma data para o primeiro dia desse mês em 2025
           const date = new Date(2025, monthData.month - 1, 1);
@@ -32,8 +29,8 @@ export const AnnualChart: React.FC = () => {
       })
       .catch(console.error);
     
-    // Carregar dados de salários
-    fetch(`https://expense-management-back.onrender.com/api/salaries/annual/${targetYear}`)
+    // Carregar todos os dados de salários (sem filtragem)
+    fetch(`https://expense-management-back.onrender.com/api/salaries`)
       .then(res => res.json())
       .then(result => setSalaries(result))
       .catch(console.error);
@@ -44,37 +41,19 @@ export const AnnualChart: React.FC = () => {
       .then(result => setUsers(result))
       .catch(console.error);
     
-    // Carregar despesas (apenas de 2025)
+    // Carregar todas as despesas (sem filtragem)
     fetch('https://expense-management-back.onrender.com/api/expenses')
       .then(res => res.json())
-      .then(result => {
-        // Filtrar apenas despesas de 2025
-        const expenses2025 = result.filter((expense: any) => {
-          const expenseDate = new Date(expense.createdAt);
-          return expenseDate.getFullYear() === 2025;
-        });
-        setExpenses(expenses2025);
-      })
+      .then(result => setExpenses(result))
       .catch(console.error);
   }, []);
 
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const maxExpense = Math.max(...data.map(d => Math.abs(d.expenses)));
 
-  // Filtrar salários apenas de 2025
-  const salaries2025 = salaries.filter(salary => {
-    const salaryDate = new Date(salary.date);
-    return salaryDate.getFullYear() === 2025;
-  });
-
-  // Calcular saldo (apenas de 2025)
-  const totalSalaries = salaries2025.reduce((sum, salary) => sum + salary.amount, 0);
-  
-  // Usar apenas as despesas de 2025 para o cálculo de total
-  const totalExpenses = Math.abs(expenses.reduce((sum, expense) => {
-    return sum + Math.abs(expense.amount);
-  }, 0));
-  
+  // Calcular saldo (incluindo todas as transações)
+  const totalSalaries = salaries.reduce((sum, salary) => sum + salary.amount, 0);
+  const totalExpenses = Math.abs(expenses.reduce((sum, expense) => sum + Math.abs(expense.amount), 0));
   const balance = totalSalaries - totalExpenses;
 
   return (
@@ -84,7 +63,7 @@ export const AnnualChart: React.FC = () => {
       borderRadius: '8px',
       margin: '20px 0'
     }}>
-      <h3>Relatório Anual 2025 <small style={{ fontSize: '14px', color: isDark ? '#aaa' : '#777' }}>(apenas transações de 2025)</small></h3>
+      <h3>Relatório Anual</h3>
       
       <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 768 ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
         <div style={{ padding: '15px', backgroundColor: isDark ? '#1565c0' : '#e3f2fd', borderRadius: '6px', textAlign: 'center' }}>
@@ -107,12 +86,12 @@ export const AnnualChart: React.FC = () => {
         <h4>Resumo por Usuário</h4>
         <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 768 ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
           {users.map(user => {
-            // Filtrar salários de 2025 deste usuário
-            const userSalaries = salaries2025
+            // Usar todos os salários deste usuário
+            const userSalaries = salaries
               .filter(s => s.userId === user._id)
               .reduce((sum, s) => sum + s.amount, 0);
             
-            // Filtrar despesas de 2025 deste usuário
+            // Usar todas as despesas deste usuário
             const userExpenses = expenses
               .filter(e => e.userId === user._id)
               .reduce((sum, e) => sum + Math.abs(e.amount), 0);
