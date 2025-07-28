@@ -21,7 +21,15 @@ export const AnnualChart: React.FC = () => {
     // Carregar dados de despesas
     fetch('https://expense-management-back.onrender.com/api/dashboard/annual')
       .then(res => res.json())
-      .then(result => setData(result.data))
+      .then(result => {
+        // Filtrar apenas dados de 2025
+        const data2025 = result.data.filter((monthData: any) => {
+          // O mês está no formato numérico (1-12), então precisamos criar uma data para o primeiro dia desse mês em 2025
+          const date = new Date(2025, monthData.month - 1, 1);
+          return date.getFullYear() === 2025;
+        });
+        setData(data2025);
+      })
       .catch(console.error);
     
     // Carregar dados de salários
@@ -53,10 +61,20 @@ export const AnnualChart: React.FC = () => {
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const maxExpense = Math.max(...data.map(d => Math.abs(d.expenses)));
 
-  // Usar mês atual apenas para destaque visual, não para filtro de dados
-  const currentMonth = new Date().getMonth() + 1;
-  const totalSalaries = salaries.reduce((sum, salary) => sum + salary.amount, 0);
-  const totalExpenses = Math.abs(data.reduce((sum, expense) => sum + expense.expenses, 0));
+  // Filtrar salários apenas de 2025
+  const salaries2025 = salaries.filter(salary => {
+    const salaryDate = new Date(salary.date);
+    return salaryDate.getFullYear() === 2025;
+  });
+
+  // Calcular saldo (apenas de 2025)
+  const totalSalaries = salaries2025.reduce((sum, salary) => sum + salary.amount, 0);
+  
+  // Usar apenas as despesas de 2025 para o cálculo de total
+  const totalExpenses = Math.abs(expenses.reduce((sum, expense) => {
+    return sum + Math.abs(expense.amount);
+  }, 0));
+  
   const balance = totalSalaries - totalExpenses;
 
   return (
@@ -66,7 +84,7 @@ export const AnnualChart: React.FC = () => {
       borderRadius: '8px',
       margin: '20px 0'
     }}>
-      <h3>Relatório Anual 2025</h3>
+      <h3>Relatório Anual 2025 <small style={{ fontSize: '14px', color: isDark ? '#aaa' : '#777' }}>(apenas transações de 2025)</small></h3>
       
       <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 768 ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
         <div style={{ padding: '15px', backgroundColor: isDark ? '#1565c0' : '#e3f2fd', borderRadius: '6px', textAlign: 'center' }}>
@@ -89,8 +107,16 @@ export const AnnualChart: React.FC = () => {
         <h4>Resumo por Usuário</h4>
         <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 768 ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
           {users.map(user => {
-            const userSalaries = salaries.filter(s => s.userId === user._id).reduce((sum, s) => sum + s.amount, 0);
-            const userExpenses = Math.abs(expenses.filter(e => e.userId === user._id).reduce((sum, e) => sum + e.amount, 0));
+            // Filtrar salários de 2025 deste usuário
+            const userSalaries = salaries2025
+              .filter(s => s.userId === user._id)
+              .reduce((sum, s) => sum + s.amount, 0);
+            
+            // Filtrar despesas de 2025 deste usuário
+            const userExpenses = expenses
+              .filter(e => e.userId === user._id)
+              .reduce((sum, e) => sum + Math.abs(e.amount), 0);
+            
             const userBalance = userSalaries - userExpenses;
             
             return (
@@ -132,35 +158,42 @@ export const AnnualChart: React.FC = () => {
       
       <h4>Gastos Mensais</h4>
       <div style={{ 
-        display: 'flex', 
-        alignItems: 'end', 
-        gap: window.innerWidth <= 768 ? '5px' : '10px', 
-        height: '200px',
-        overflowX: window.innerWidth <= 768 ? 'auto' : 'visible',
-        minWidth: window.innerWidth <= 768 ? '600px' : 'auto'
+        overflowX: 'auto', 
+        width: '100%',
+        paddingBottom: '10px'
       }}>
-        {data.map((item, index) => (
-          <div key={item.month} style={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            alignItems: 'center',
-            flex: 1
-          }}>
-            <div style={{
-              height: `${(Math.abs(item.expenses) / maxExpense) * 150}px`,
-              backgroundColor: isDark ? '#4a90e2' : '#007bff',
-              width: '100%',
-              borderRadius: '4px 4px 0 0',
-              minHeight: '5px'
-            }}></div>
-            <small style={{ marginTop: '5px', fontSize: '12px' }}>
-              {months[index]}
-            </small>
-            <small style={{ fontSize: '10px', color: isDark ? '#ccc' : '#666' }}>
-              €{Math.abs(item.expenses).toFixed(0)}
-            </small>
-          </div>
-        ))}
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'flex-end',
+          gap: '10px', 
+          height: '200px',
+          minWidth: window.innerWidth <= 768 ? '600px' : 'auto',
+          paddingBottom: '5px'
+        }}>
+          {data.map((item, index) => (
+            <div key={item.month} style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center',
+              flex: 1,
+              minWidth: '30px'
+            }}>
+              <div style={{
+                height: `${(Math.abs(item.expenses) / maxExpense) * 150}px`,
+                backgroundColor: isDark ? '#4a90e2' : '#007bff',
+                width: '100%',
+                borderRadius: '4px 4px 0 0',
+                minHeight: '5px'
+              }}></div>
+              <small style={{ marginTop: '5px', fontSize: '12px' }}>
+                {months[index]}
+              </small>
+              <small style={{ fontSize: '10px', color: isDark ? '#ccc' : '#666' }}>
+                €{Math.abs(item.expenses).toFixed(0)}
+              </small>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
