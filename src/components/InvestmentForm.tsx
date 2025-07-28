@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Investment, User } from '../types';
 import { investmentService } from '../services/api';
 import { useTheme } from './ThemeProvider';
+import { exchangeRates } from '../utils/currencyConverter';
 
 interface InvestmentFormProps {
   currentUser: User;
@@ -111,11 +112,21 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ currentUser, onI
           onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
           style={inputStyle}
         >
-          <option value="EUR">Em que moeda? - EUR</option>
-          <option value="USD">Em que moeda? - USD</option>
-          <option value="GBP">Em que moeda? - GBP</option>
-          <option value="BRL">Em que moeda? - BRL</option>
+          <option value="EUR">Euro (EUR) - Moeda Base</option>
+          <option value="USD">Dólar (USD) - Taxa: {(1/exchangeRates.USD).toFixed(2)} EUR</option>
+          <option value="GBP">Libra (GBP) - Taxa: {(1/exchangeRates.GBP).toFixed(2)} EUR</option>
+          <option value="BRL">Real (BRL) - Taxa: {(1/exchangeRates.BRL).toFixed(2)} EUR</option>
         </select>
+        <div style={{ 
+          fontSize: '12px', 
+          color: isDark ? '#bbb' : '#666', 
+          marginTop: '5px',
+          padding: '5px',
+          backgroundColor: isDark ? '#3a3a3a' : '#f0f0f0',
+          borderRadius: '4px'
+        }}>
+          Nota: Todos os valores serão convertidos para Euro (€) no dashboard para cálculos consistentes.
+        </div>
       </div>
       <div>
         <input

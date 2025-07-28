@@ -15,7 +15,8 @@ export const AnnualChart: React.FC = () => {
   const { isDark } = useTheme();
 
   useEffect(() => {
-    const currentYear = new Date().getFullYear();
+    // Sempre usar o ano 2025, independentemente do ano atual
+    const targetYear = 2025;
     
     // Carregar dados de despesas
     fetch('https://expense-management-back.onrender.com/api/dashboard/annual')
@@ -24,7 +25,7 @@ export const AnnualChart: React.FC = () => {
       .catch(console.error);
     
     // Carregar dados de salários
-    fetch(`https://expense-management-back.onrender.com/api/salaries/annual/${currentYear}`)
+    fetch(`https://expense-management-back.onrender.com/api/salaries/annual/${targetYear}`)
       .then(res => res.json())
       .then(result => setSalaries(result))
       .catch(console.error);
@@ -35,16 +36,24 @@ export const AnnualChart: React.FC = () => {
       .then(result => setUsers(result))
       .catch(console.error);
     
-    // Carregar despesas
+    // Carregar despesas (apenas de 2025)
     fetch('https://expense-management-back.onrender.com/api/expenses')
       .then(res => res.json())
-      .then(result => setExpenses(result))
+      .then(result => {
+        // Filtrar apenas despesas de 2025
+        const expenses2025 = result.filter((expense: any) => {
+          const expenseDate = new Date(expense.createdAt);
+          return expenseDate.getFullYear() === 2025;
+        });
+        setExpenses(expenses2025);
+      })
       .catch(console.error);
   }, []);
 
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
   const maxExpense = Math.max(...data.map(d => Math.abs(d.expenses)));
 
+  // Usar mês atual apenas para destaque visual, não para filtro de dados
   const currentMonth = new Date().getMonth() + 1;
   const totalSalaries = salaries.reduce((sum, salary) => sum + salary.amount, 0);
   const totalExpenses = Math.abs(data.reduce((sum, expense) => sum + expense.expenses, 0));

@@ -21,7 +21,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser }) => {
 
   const loadData = async () => {
     try {
-      const currentYear = new Date().getFullYear();
+      // Use sempre 2025 como ano de referência
+      const targetYear = 2025;
       const currentMonth = new Date().getMonth() + 1;
       
       const [usersRes, expensesRes, investmentsRes, fundsRes, salariesRes] = await Promise.all([
@@ -29,17 +30,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser }) => {
         expenseService.list(),
         investmentService.list(),
         travelFundService.list(),
-        salaryService.getAnnual(currentYear)
+        salaryService.getAnnual(targetYear)
       ]);
       
       // Admin users veem todos os dados (IDs específicos)
       const adminIds = ['6884f1b07f0be3c02772d85c', '6884f319e268d1d9a7613530']; // Antonio e Jhessika
       const isAdmin = adminIds.includes(currentUser._id!);
       
-      // Filtrar despesas apenas do mês atual
+      // Filtrar despesas apenas do mês atual e do ano 2025
       const allMonthlyExpenses = expensesRes.data.filter(expense => {
         const expenseDate = new Date(expense.createdAt!);
-        return expenseDate.getMonth() + 1 === currentMonth && expenseDate.getFullYear() === currentYear;
+        return expenseDate.getMonth() + 1 === currentMonth && expenseDate.getFullYear() === targetYear;
       });
       
       const monthlyExpenses = isAdmin ? allMonthlyExpenses : allMonthlyExpenses.filter(expense => expense.userId === currentUser._id);

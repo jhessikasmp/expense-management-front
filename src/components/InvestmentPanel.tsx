@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Investment } from '../types';
 import { investmentService, expenseService } from '../services/api';
 import { useTheme } from './ThemeProvider';
+import { convertToEUR, getCurrencySymbol } from '../utils/currencyConverter';
 
 interface InvestmentWithPrice extends Investment {
   currentPrice: number;
@@ -55,6 +56,9 @@ export const InvestmentPanel: React.FC = () => {
       const response = await fetch('https://expense-management-back.onrender.com/api/dashboard/investments-prices');
       const data = await response.json();
       setInvestments(data);
+      
+      // Adicionar alerta para informar o usuário sobre a API removida
+      alert('API Alpha Vantage foi removida. Preços exibidos são os mesmos armazenados no sistema.');
     } catch (error) {
       console.error('Erro ao atualizar preços:', error);
     } finally {
@@ -98,12 +102,6 @@ export const InvestmentPanel: React.FC = () => {
   useEffect(() => {
     loadBasicInvestments();
   }, []);
-
-  // Converter tudo para EUR (cotações aproximadas)
-  const convertToEUR = (amount: number, currency: string) => {
-    const rates = { EUR: 1, USD: 0.85, BRL: 0.17, GBP: 1.15 };
-    return amount * (rates[currency as keyof typeof rates] || 1);
-  };
   
   const totalMonthlyInvestedEUR = monthlyInvestments.reduce((sum, expense) => {
     return sum + convertToEUR(Math.abs(expense.amount), expense.currency || 'EUR');
@@ -245,7 +243,7 @@ export const InvestmentPanel: React.FC = () => {
                       borderTop: `1px solid ${isDark ? '#555' : '#ddd'}`
                     }}>
                       {typeInvestments.map(investment => {
-                        const symbol = investment.currency === 'BRL' ? 'R$' : investment.currency === 'USD' ? '$' : investment.currency === 'GBP' ? '£' : '€';
+                        const symbol = getCurrencySymbol(investment.currency);
                         return (
                           <div key={investment._id} style={{
                             padding: '8px 10px',
@@ -260,7 +258,7 @@ export const InvestmentPanel: React.FC = () => {
                             <div style={{ flex: 1 }}>
                               <div style={{ fontSize: '14px', fontWeight: '500' }}>{investment.asset}</div>
                               <div style={{ fontSize: '12px', color: isDark ? '#ccc' : '#666', margin: '2px 0' }}>
-                                {investment.quantity} × {symbol}{investment.unitPrice}
+                                {investment.quantity} × {symbol}{investment.unitPrice.toFixed(2)}
                               </div>
                               <div style={{ fontSize: '11px', color: isDark ? '#aaa' : '#888' }}>
                                 {investment.description}
@@ -270,6 +268,9 @@ export const InvestmentPanel: React.FC = () => {
                               <div style={{ textAlign: 'right' }}>
                                 <div style={{ fontSize: '14px', fontWeight: 'bold' }}>
                                   {symbol}{investment.totalValue.toFixed(2)}
+                                </div>
+                                <div style={{ fontSize: '10px', color: isDark ? '#aaa' : '#888' }}>
+                                  (€{convertToEUR(investment.totalValue, investment.currency).toFixed(2)} EUR)
                                 </div>
                                 <div style={{ fontSize: '10px', color: isDark ? '#aaa' : '#888' }}>
                                   {new Date(investment.createdAt!).toLocaleDateString('pt-BR')}
