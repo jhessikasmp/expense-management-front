@@ -15,6 +15,8 @@ export const AnnualChart: React.FC = () => {
   const { isDark } = useTheme();
 
   useEffect(() => {
+    const currentYear = 2025; // Ano atual fixo para a aplicação
+    
     // Carregar dados de despesas para o gráfico (filtrar por 2025 para o gráfico de barras)
     fetch('https://expense-management-back.onrender.com/api/dashboard/annual')
       .then(res => res.json())
@@ -23,16 +25,23 @@ export const AnnualChart: React.FC = () => {
         const data2025 = result.data.filter((monthData: any) => {
           // O mês está no formato numérico (1-12), então precisamos criar uma data para o primeiro dia desse mês em 2025
           const date = new Date(2025, monthData.month - 1, 1);
-          return date.getFullYear() === 2025;
+          return date.getFullYear() === currentYear;
         });
         setData(data2025);
       })
       .catch(console.error);
     
-    // Carregar todos os dados de salários (sem filtragem)
+    // Carregar todos os dados de salários
     fetch(`https://expense-management-back.onrender.com/api/salaries`)
       .then(res => res.json())
-      .then(result => setSalaries(result))
+      .then(result => {
+        // Filtrar salários de 2025
+        const salaries2025 = result.filter((salary: any) => {
+          const salaryDate = new Date(salary.date);
+          return salaryDate.getFullYear() === currentYear;
+        });
+        setSalaries(salaries2025);
+      })
       .catch(console.error);
     
     // Carregar usuários
@@ -41,10 +50,17 @@ export const AnnualChart: React.FC = () => {
       .then(result => setUsers(result))
       .catch(console.error);
     
-    // Carregar todas as despesas (sem filtragem)
+    // Carregar todas as despesas
     fetch('https://expense-management-back.onrender.com/api/expenses')
       .then(res => res.json())
-      .then(result => setExpenses(result))
+      .then(result => {
+        // Filtrar apenas despesas de 2025
+        const expenses2025 = result.filter((expense: any) => {
+          const expenseDate = new Date(expense.createdAt);
+          return expenseDate.getFullYear() === currentYear;
+        });
+        setExpenses(expenses2025);
+      })
       .catch(console.error);
   }, []);
 
@@ -63,7 +79,7 @@ export const AnnualChart: React.FC = () => {
       borderRadius: '8px',
       margin: '20px 0'
     }}>
-      <h3>Relatório Anual</h3>
+      <h3>Relatório Anual 2025</h3>
       
       <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 768 ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
         <div style={{ padding: '15px', backgroundColor: isDark ? '#1565c0' : '#e3f2fd', borderRadius: '6px', textAlign: 'center' }}>

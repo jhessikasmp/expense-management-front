@@ -50,3 +50,45 @@ export const fundService = {
   list: (userId?: string, category?: string) => api.get('/funds', { params: { userId, category } }),
   delete: (id: string) => api.delete(`/funds/${id}`),
 };
+
+// Serviço para obter preços de ativos financeiros
+export const assetPriceService = {
+  // Obter preço de criptomoedas usando CoinGecko API
+  getCryptoPrice: async (coinId: string, currency = 'eur') => {
+    try {
+      const response = await axios.get(
+        `https://api.coingecko.com/api/v3/simple/price?ids=${coinId}&vs_currencies=${currency}`
+      );
+      return response.data;
+    } catch (error) {
+      console.error(`Erro ao buscar preço da criptomoeda ${coinId}:`, error);
+      throw error;
+    }
+  },
+  
+  // Obter preço de ações e ETFs usando Yahoo Finance API
+  getStockPrice: async (symbol: string) => {
+    try {
+      const response = await axios.get(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?region=US&lang=en-US&interval=1d`
+      );
+      return response.data;
+    } catch (error) {
+      console.error(`Erro ao buscar preço da ação/ETF ${symbol}:`, error);
+      throw error;
+    }
+  },
+  
+  // Lista de criptomoedas suportadas
+  getSupportedCryptos: async () => {
+    try {
+      const response = await axios.get(
+        'https://api.coingecko.com/api/v3/coins/list?include_platform=false'
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Erro ao buscar lista de criptomoedas:', error);
+      throw error;
+    }
+  }
+};

@@ -12,6 +12,8 @@ import { EmergencyFund } from './components/EmergencyFund';
 import { CarReserve } from './components/CarReserve';
 import { Allowance } from './components/Allowance';
 import { ThemeProvider, useTheme } from './components/ThemeProvider';
+import { PortfolioTracker } from './components/PortfolioTracker';
+import { AssetPriceUpdater } from './components/AssetPriceUpdater';
 import { User, Investment } from './types';
 
 const AppContent: React.FC = () => {
@@ -168,6 +170,9 @@ const AppContent: React.FC = () => {
               <button style={menuItemStyle('investments')} onClick={() => { setActiveTab('investments'); setMenuOpen(false); }}>
                 💹 Investimentos
               </button>
+              <button style={menuItemStyle('portfolio')} onClick={() => { setActiveTab('portfolio'); setMenuOpen(false); }}>
+                📊 Preços de Mercado
+              </button>
               <button style={menuItemStyle('travel-funds')} onClick={() => { setActiveTab('travel-funds'); setMenuOpen(false); }}>
                 ✈️ Fundos de Viagem
               </button>
@@ -198,6 +203,9 @@ const AppContent: React.FC = () => {
           </button>
           <button style={tabStyle('investments')} onClick={() => setActiveTab('investments')}>
             Investimentos
+          </button>
+          <button style={tabStyle('portfolio')} onClick={() => setActiveTab('portfolio')}>
+            Preços de Mercado
           </button>
           <button style={tabStyle('travel-funds')} onClick={() => setActiveTab('travel-funds')}>
             Fundos de Viagem
@@ -233,9 +241,12 @@ const AppContent: React.FC = () => {
         {activeTab === 'investments' && (
           <div>
             <InvestmentForm currentUser={currentUser} onInvestmentCreated={handleInvestmentCreated} />
+            <AssetPriceUpdater />
             <InvestmentPanel />
           </div>
         )}
+        
+        {activeTab === 'portfolio' && <PortfolioTracker />}
         
         {activeTab === 'travel-funds' && <TravelFundForm currentUser={currentUser} />}
         
