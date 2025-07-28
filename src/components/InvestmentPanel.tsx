@@ -14,22 +14,19 @@ interface InvestmentWithPrice extends Investment {
 export const InvestmentPanel: React.FC = () => {
   const [investments, setInvestments] = useState<InvestmentWithPrice[]>([]);
   const [loading, setLoading] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<any>({});
+  // Removidas variáveis não utilizadas
+  // const [editingId, setEditingId] = useState<string | null>(null);
+  // const [editForm, setEditForm] = useState<any>({});
   const [monthlyInvestments, setMonthlyInvestments] = useState<any[]>([]);
   const [selectedCurrency, setSelectedCurrency] = useState<string>('');
   const { isDark } = useTheme();
 
   const loadBasicInvestments = async () => {
     try {
-      console.log('Carregando investimentos...');
       const [investmentsRes, expensesRes] = await Promise.all([
         investmentService.list(),
         expenseService.list()
       ]);
-      
-      console.log('Investments Response:', investmentsRes);
-      console.log('Expenses Response:', expensesRes);
       
       // Aportes mensais (despesas com categoria investimentos)
       const investmentExpenses = expensesRes.data.filter(exp => exp.category === 'investimentos');
@@ -42,8 +39,6 @@ export const InvestmentPanel: React.FC = () => {
         profit: 0
       }));
       
-      console.log('Investments processed:', investmentsData);
-      console.log('Monthly investments:', investmentExpenses);
       setInvestments(investmentsData);
     } catch (error) {
       console.error('Erro ao carregar investimentos:', error);
@@ -66,27 +61,29 @@ export const InvestmentPanel: React.FC = () => {
     }
   };
 
-  const handleEdit = (investment: InvestmentWithPrice) => {
-    setEditingId(investment._id!);
-    setEditForm({
-      asset: investment.asset,
-      description: investment.description,
-      quantity: investment.quantity,
-      unitPrice: investment.unitPrice
-    });
-  };
+  // Função removida pois não estava sendo utilizada
+  // const handleEdit = (investment: InvestmentWithPrice) => {
+  //  setEditingId(investment._id!);
+  //  setEditForm({
+  //    asset: investment.asset,
+  //    description: investment.description,
+  //    quantity: investment.quantity,
+  //    unitPrice: investment.unitPrice
+  //  });
+  // };
 
-  const handleUpdate = async () => {
-    if (!editingId) return;
-    try {
-      await investmentService.update(editingId, editForm);
-      setEditingId(null);
-      setEditForm({});
-      loadBasicInvestments();
-    } catch (error) {
-      console.error('Erro ao atualizar investimento:', error);
-    }
-  };
+  // Função removida pois não estava sendo utilizada
+  // const handleUpdate = async () => {
+  //   if (!editingId) return;
+  //   try {
+  //     await investmentService.update(editingId, editForm);
+  //     setEditingId(null);
+  //     setEditForm({});
+  //     loadBasicInvestments();
+  //   } catch (error) {
+  //     console.error('Erro ao atualizar investimento:', error);
+  //   }
+  // };
 
   const handleDelete = async (id: string) => {
     if (window.confirm('Tem certeza que deseja excluir este investimento?')) {
@@ -277,9 +274,7 @@ export const InvestmentPanel: React.FC = () => {
                                 </div>
                               </div>
                               <div>
-                                <button onClick={() => handleEdit(investment)} style={{ marginRight: '3px', padding: '3px 6px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '3px', fontSize: '11px' }}>
-                                  ✏️
-                                </button>
+                                {/* Botão de edição removido temporariamente */}
                                 <button onClick={() => handleDelete(investment._id!)} style={{ padding: '3px 6px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '3px', fontSize: '11px' }}>
                                   🗑️
                                 </button>

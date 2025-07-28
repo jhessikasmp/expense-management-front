@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { User, Expense, Investment, TravelFund } from '../types';
 import { userService, expenseService, investmentService, travelFundService, salaryService } from '../services/api';
 import { useTheme } from './ThemeProvider';
@@ -8,25 +8,21 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ currentUser }) => {
-  const [users, setUsers] = useState<User[]>([]);
+  // Removemos users pois não está sendo usado
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [investments, setInvestments] = useState<Investment[]>([]);
   const [travelFunds, setTravelFunds] = useState<TravelFund[]>([]);
   const [monthlySalaries, setMonthlySalaries] = useState<any[]>([]);
   const { isDark } = useTheme();
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       // Use sempre 2025 como ano de referência
       const targetYear = 2025;
       const currentMonth = new Date().getMonth() + 1;
       
-      const [usersRes, expensesRes, investmentsRes, fundsRes, salariesRes] = await Promise.all([
-        userService.list(),
+      const [, expensesRes, investmentsRes, fundsRes, salariesRes] = await Promise.all([
+        userService.list(), // Mantemos a chamada API, mas não utilizamos o resultado
         expenseService.list(),
         investmentService.list(),
         travelFundService.list(),
@@ -36,6 +32,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser }) => {
       // Admin users veem todos os dados (IDs específicos)
       const adminIds = ['6884f1b07f0be3c02772d85c', '6884f319e268d1d9a7613530']; // Antonio e Jhessika
       const isAdmin = adminIds.includes(currentUser._id!);
+      
       
       // Filtrar despesas apenas do mês atual e do ano 2025
       const allMonthlyExpenses = expensesRes.data.filter(expense => {
@@ -48,7 +45,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser }) => {
       const userFunds = fundsRes.data;
       const userSalaries = isAdmin ? salariesRes.data : salariesRes.data.filter((salary: any) => salary.userId === currentUser._id);
       
-      setUsers(usersRes.data);
       setExpenses(monthlyExpenses);
       setInvestments(userInvestments);
       setTravelFunds(userFunds);
@@ -56,7 +52,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser }) => {
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     }
-  };
+  }, [currentUser._id]); // Adicionamos currentUser._id como dependência
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]); // Agora loadData está na lista de dependências
 
   const currentMonth = new Date().getMonth() + 1;
   const totalExpenses = Math.abs(expenses.reduce((sum, expense) => sum + expense.amount, 0));

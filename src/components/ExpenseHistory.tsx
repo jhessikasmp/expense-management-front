@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Expense, User } from '../types';
 import { expenseService, userService } from '../services/api';
 import { useTheme } from './ThemeProvider';
@@ -18,11 +18,7 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({ currentUser, onE
   const [users, setUsers] = useState<User[]>([]);
   const { isDark } = useTheme();
 
-  useEffect(() => {
-    loadExpenses();
-  }, []);
-
-  const loadExpenses = async () => {
+  const loadExpenses = useCallback(async () => {
     try {
       const [expensesRes, usersRes] = await Promise.all([
         expenseService.list(),
@@ -37,8 +33,6 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({ currentUser, onE
       // Admin users veem todos os dados (IDs específicos)
       const adminIds = ['6884f1b07f0be3c02772d85c', '6884f319e268d1d9a7613530']; // Antonio e Jhessika
       const isAdmin = adminIds.includes(currentUser._id!);
-      console.log('Current user:', currentUser.name, currentUser._id);
-      console.log('Is admin:', isAdmin);
       const userExpenses = isAdmin ? expenses : expenses.filter(expense => expense.userId === currentUser._id);
       
       const current = userExpenses.filter(expense => {
@@ -52,7 +46,6 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({ currentUser, onE
         return !(expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear);
       }).forEach(expense => {
         const expenseDate = new Date(expense.createdAt!);
-        const monthKey = `${expenseDate.getFullYear()}-${expenseDate.getMonth()}`;
         const monthLabel = expenseDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
         
         if (!previous[monthLabel]) {
@@ -66,7 +59,11 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({ currentUser, onE
     } catch (error) {
       console.error('Erro ao carregar despesas:', error);
     }
-  };
+  }, [currentUser._id]);
+
+  useEffect(() => {
+    loadExpenses();
+  }, [loadExpenses]);
 
   const handleEdit = (expense: Expense) => {
     setEditingId(expense._id!);

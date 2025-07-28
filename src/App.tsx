@@ -12,7 +12,7 @@ import { EmergencyFund } from './components/EmergencyFund';
 import { CarReserve } from './components/CarReserve';
 import { Allowance } from './components/Allowance';
 import { ThemeProvider, useTheme } from './components/ThemeProvider';
-import { User, Expense, Investment } from './types';
+import { User, Investment } from './types';
 
 const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -40,12 +40,15 @@ const AppContent: React.FC = () => {
 
 
 
-  const handleExpenseCreated = (expense: Expense) => {
-    console.log('Despesa criada:', expense);
-  };
+  // As funções abaixo não estão sendo usadas diretamente, mas são mantidas para referência futura
+  // const handleExpenseCreated = (expense: Expense) => {
+  //   // Atualiza estado após criar despesa
+  //   setRefreshKey(prev => prev + 1);
+  // };
 
   const handleInvestmentCreated = (investment: Investment) => {
-    console.log('Investimento criado:', investment);
+    // Atualiza estado após criar investimento
+    setRefreshKey(prev => prev + 1);
   };
 
   if (!currentUser) {
