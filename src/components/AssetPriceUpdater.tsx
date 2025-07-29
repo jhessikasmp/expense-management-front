@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from './ThemeProvider';
-import { investmentService } from '../services/api';
+import { investmentService, expenseService } from '../services/api';
 
 // Interface para os investimentos
 interface Investment {
@@ -36,6 +36,17 @@ export const AssetPriceUpdater: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const { isDark } = useTheme();
+  // Estados para controlar os painéis acordeão
+  const [openPanel, setOpenPanel] = useState<string | null>(null);
+  const [monthlyInvestment, setMonthlyInvestment] = useState<number>(0);
+  const [totalInvestment, setTotalInvestment] = useState<number>(0);
+  const [totalProfitLoss, setTotalProfitLoss] = useState<number>(0);
+  const [totalProfitLossPercentage, setTotalProfitLossPercentage] = useState<number>(0);
+
+  // Função para alternar a abertura/fechamento dos painéis
+  const togglePanel = (panelName: string) => {
+    setOpenPanel(openPanel === panelName ? null : panelName);
+  };
 
   // Função para detectar automaticamente o símbolo Yahoo Finance com base no asset
   const getYahooSymbol = (asset: string, description: string): string | null => {
@@ -118,13 +129,24 @@ export const AssetPriceUpdater: React.FC = () => {
     return null;
   };
 
-  // Carregar investimentos quando o componente montar
+  // Carregar investimentos e dados mensais quando o componente montar
   useEffect(() => {
-    const fetchInvestments = async () => {
+    const fetchInvestmentsAndExpenses = async () => {
       setLoading(true);
       try {
-        const response = await investmentService.list();
-        const investments = response.data;
+        // Carregar investimentos e despesas em paralelo
+        const [investmentsRes, expensesRes] = await Promise.all([
+          investmentService.list(),
+          expenseService.list()
+        ]);
+        
+        const investments = investmentsRes.data;
+        const investmentExpenses = expensesRes.data.filter(exp => exp.category === 'investimentos');
+        
+        // Calcular montante mensal médio
+        const monthly = investmentExpenses.reduce((sum, exp) => sum + Math.abs(exp.amount), 0) / 
+                        (investmentExpenses.length > 0 ? Math.max(1, Math.ceil(investmentExpenses.length / 12)) : 1);
+        setMonthlyInvestment(monthly);
         
         // Adicionar símbolos do Yahoo Finance aos investimentos
         const enhancedInvestments = investments.map((inv: any) => ({
@@ -134,17 +156,21 @@ export const AssetPriceUpdater: React.FC = () => {
         
         setInvestments(enhancedInvestments);
         
+        // Calcular valor total investido
+        const totalInv = enhancedInvestments.reduce((sum, inv) => sum + (inv.quantity * inv.unitPrice), 0);
+        setTotalInvestment(totalInv);
+        
         // Inicializar os preços dos ativos com os valores originais
         const initialPrices = enhancedInvestments.map((inv: any) => ({
           asset: inv.asset,
           description: inv.description,
           quantity: inv.quantity,
           originalPrice: inv.unitPrice,
-          currentPrice: null,
+          currentPrice: inv.unitPrice, // Iniciar com o preço original em vez de null
           originalTotal: inv.quantity * inv.unitPrice,
-          currentTotal: null,
+          currentTotal: inv.quantity * inv.unitPrice, // Iniciar com o total original em vez de null
           currency: inv.currency,
-          percentChange: null
+          percentChange: 0 // Iniciar com 0% em vez de null
         }));
         
         setAssetPrices(initialPrices);
@@ -156,7 +182,7 @@ export const AssetPriceUpdater: React.FC = () => {
       }
     };
     
-    fetchInvestments();
+    fetchInvestmentsAndExpenses();
   }, []);
 
   // Função para buscar preço atual via Yahoo Finance API
@@ -184,7 +210,10 @@ export const AssetPriceUpdater: React.FC = () => {
     setUpdating(true);
     setError(null);
     
-    const updatedPrices = [...assetPrices];
+    // Cria uma cópia profunda para evitar referências
+    const updatedPrices = JSON.parse(JSON.stringify(assetPrices));
+    let totalOriginalValue = 0;
+    let totalCurrentValue = 0;
     
     for (let i = 0; i < investments.length; i++) {
       const investment = investments[i];
@@ -207,6 +236,20 @@ export const AssetPriceUpdater: React.FC = () => {
               currentTotal,
               percentChange
             };
+            
+            totalOriginalValue += investment.quantity * originalPrice;
+            totalCurrentValue += currentTotal;
+          } else {
+            // Se não conseguir obter o preço atual, usar o preço original
+            updatedPrices[priceIndex] = {
+              ...updatedPrices[priceIndex],
+              currentPrice: investment.unitPrice,
+              currentTotal: investment.quantity * investment.unitPrice,
+              percentChange: 0
+            };
+            
+            totalOriginalValue += investment.quantity * investment.unitPrice;
+            totalCurrentValue += investment.quantity * investment.unitPrice;
           }
         } else {
           // Tentar detectar símbolo automaticamente para novos ativos
@@ -235,15 +278,32 @@ export const AssetPriceUpdater: React.FC = () => {
                 currentTotal,
                 percentChange
               };
+              
+              totalOriginalValue += investment.quantity * originalPrice;
+              totalCurrentValue += currentTotal;
+            } else {
+              // Se não conseguir obter o preço atual, usar o preço original
+              updatedPrices[priceIndex] = {
+                ...updatedPrices[priceIndex],
+                currentPrice: investment.unitPrice,
+                currentTotal: investment.quantity * investment.unitPrice,
+                percentChange: 0
+              };
+              
+              totalOriginalValue += investment.quantity * investment.unitPrice;
+              totalCurrentValue += investment.quantity * investment.unitPrice;
             }
           } else {
-            // Para ativos sem símbolo Yahoo, mantemos os dados originais
+            // Para ativos sem símbolo Yahoo, usar o preço original como preço atual
             updatedPrices[priceIndex] = {
               ...updatedPrices[priceIndex],
               currentPrice: investment.unitPrice,
               currentTotal: investment.quantity * investment.unitPrice,
               percentChange: 0
             };
+            
+            totalOriginalValue += investment.quantity * investment.unitPrice;
+            totalCurrentValue += investment.quantity * investment.unitPrice;
           }
         }
         
@@ -254,8 +314,17 @@ export const AssetPriceUpdater: React.FC = () => {
           ...updatedPrices[priceIndex],
           error: `Falha ao atualizar preço: ${err instanceof Error ? err.message : 'Erro desconhecido'}`
         };
+        
+        // Em caso de erro, adicionar os valores originais
+        totalOriginalValue += investment.quantity * investment.unitPrice;
+        totalCurrentValue += investment.quantity * investment.unitPrice;
       }
     }
+    
+    // Atualizar valores totais e percentagem de lucro/prejuízo
+    setTotalInvestment(totalOriginalValue);
+    setTotalProfitLoss(totalCurrentValue - totalOriginalValue);
+    setTotalProfitLossPercentage(totalOriginalValue > 0 ? ((totalCurrentValue - totalOriginalValue) / totalOriginalValue) * 100 : 0);
     
     setAssetPrices(updatedPrices);
     setLastUpdate(new Date());
@@ -305,29 +374,28 @@ export const AssetPriceUpdater: React.FC = () => {
     color: isDark ? 'white' : 'black'
   };
 
-  const tableStyle = {
-    width: '100%',
-    borderCollapse: 'collapse' as 'collapse',
-    marginTop: '15px'
+  // Estilos para a tabela do acordeão
+  const tableHeaderStyle = {
+    textAlign: 'left' as 'left',
+    padding: '10px',
+    borderBottom: `2px solid ${isDark ? '#444' : '#dee2e6'}`,
+    color: isDark ? '#ddd' : '#495057'
   };
 
-  const cellStyle = {
-    padding: '12px',
-    borderBottom: `1px solid ${isDark ? '#555' : '#eee'}`,
-    textAlign: 'left' as 'left'
+  const tableCellStyle = {
+    padding: '10px',
+    borderBottom: `1px solid ${isDark ? '#444' : '#dee2e6'}`,
+    color: isDark ? '#ddd' : '#212529'
   };
 
-  const headerCellStyle = {
-    ...cellStyle,
-    fontWeight: 'bold' as 'bold',
-    color: isDark ? '#ccc' : '#333',
-    backgroundColor: isDark ? '#3d3d3d' : '#f0f0f0'
-  };
-
-  // Agrupar ativos por moeda
-  const eurAssets = assetPrices.filter(asset => asset.currency === 'EUR');
-  const usdAssets = assetPrices.filter(asset => asset.currency === 'USD');
-  const brlAssets = assetPrices.filter(asset => asset.currency === 'BRL');
+  // Agrupar ativos por moeda para o acordeão
+  const groupedAssets = assetPrices.reduce<Record<string, AssetPrice[]>>((acc, asset) => {
+    if (!acc[asset.currency]) {
+      acc[asset.currency] = [];
+    }
+    acc[asset.currency].push(asset);
+    return acc;
+  }, {});
 
   // Ordenar ativos por valor total (ordem decrescente)
   const sortAssets = (assets: AssetPrice[]) => {
@@ -337,10 +405,6 @@ export const AssetPriceUpdater: React.FC = () => {
       return bTotal - aTotal;
     });
   };
-
-  const sortedEurAssets = sortAssets(eurAssets);
-  const sortedUsdAssets = sortAssets(usdAssets);
-  const sortedBrlAssets = sortAssets(brlAssets);
 
   return (
     <div style={cardStyle}>
@@ -382,231 +446,282 @@ export const AssetPriceUpdater: React.FC = () => {
           {error}
         </div>
       )}
-      
-      {/* Resumo dos totais */}
+
+      {/* Cards Informativos no Topo */}
       <div style={{ 
-        display: 'flex', 
-        flexWrap: 'wrap', 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
         gap: '15px', 
-        marginBottom: '20px',
-        padding: '15px',
-        backgroundColor: isDark ? '#333' : '#e9ecef',
-        borderRadius: '8px'
+        marginBottom: '20px' 
       }}>
-        {Object.entries(totals.originalTotal).map(([currency, value]) => {
-          const currentValue = totals.currentTotal[currency as keyof typeof totals.currentTotal];
-          const diff = currentValue - value;
-          const percentChange = value > 0 ? (diff / value) * 100 : 0;
-          
-          // Só mostrar se houver algum valor
-          if (value === 0) return null;
-          
-          return (
-            <div key={currency} style={{ 
-              flex: '1', 
-              minWidth: '250px',
-              padding: '15px',
-              borderRadius: '8px',
-              backgroundColor: isDark ? '#2d2d2d' : 'white',
-              border: `1px solid ${isDark ? '#444' : '#ddd'}`
+        {/* Card 1: Aportes Mensais */}
+        <div style={{ 
+          padding: '15px', 
+          borderRadius: '8px', 
+          backgroundColor: isDark ? '#3d3d3d' : '#e3f2fd',
+          border: `1px solid ${isDark ? '#444' : '#b3e5fc'}`,
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{ fontSize: '14px', color: isDark ? '#aaa' : '#0277bd' }}>Aporte Mensal Médio</div>
+          <div style={{ 
+            fontSize: '24px', 
+            fontWeight: 'bold', 
+            margin: '10px 0', 
+            color: isDark ? 'white' : '#0277bd' 
+          }}>
+            €{monthlyInvestment.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <div style={{ fontSize: '12px', color: isDark ? '#888' : '#555' }}>
+            Valor médio investido mensalmente
+          </div>
+        </div>
+        
+        {/* Card 2: Valor Total Investido */}
+        <div style={{ 
+          padding: '15px', 
+          borderRadius: '8px', 
+          backgroundColor: isDark ? '#3d3d3d' : '#e8f5e9',
+          border: `1px solid ${isDark ? '#444' : '#c8e6c9'}`,
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{ fontSize: '14px', color: isDark ? '#aaa' : '#2e7d32' }}>Valor Total Investido</div>
+          <div style={{ 
+            fontSize: '24px', 
+            fontWeight: 'bold', 
+            margin: '10px 0', 
+            color: isDark ? 'white' : '#2e7d32' 
+          }}>
+            €{totalInvestment.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
+          <div style={{ fontSize: '12px', color: isDark ? '#888' : '#555' }}>
+            Valor total aportado em investimentos
+          </div>
+        </div>
+        
+        {/* Card 3: Lucro/Prejuízo */}
+        <div style={{ 
+          padding: '15px', 
+          borderRadius: '8px', 
+          backgroundColor: isDark ? '#3d3d3d' : totalProfitLoss >= 0 ? '#e3f2fd' : '#ffebee',
+          border: `1px solid ${isDark ? '#444' : totalProfitLoss >= 0 ? '#b3e5fc' : '#ffcdd2'}`,
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{ 
+            fontSize: '14px', 
+            color: isDark ? '#aaa' : totalProfitLoss >= 0 ? '#0277bd' : '#c62828' 
+          }}>
+            Lucro/Prejuízo
+          </div>
+          <div style={{ 
+            fontSize: '24px', 
+            fontWeight: 'bold', 
+            margin: '10px 0', 
+            color: totalProfitLoss >= 0 ? (isDark ? '#81c784' : '#2e7d32') : (isDark ? '#ef9a9a' : '#c62828')
+          }}>
+            {totalProfitLoss >= 0 ? '+' : ''}
+            {totalProfitLoss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+            <span style={{ 
+              fontSize: '16px', 
+              marginLeft: '5px',
+              color: totalProfitLoss >= 0 ? (isDark ? '#81c784' : '#2e7d32') : (isDark ? '#ef9a9a' : '#c62828')
             }}>
-              <h4 style={{ margin: '0 0 10px 0' }}>{currency}</h4>
-              <div style={{ fontSize: '14px', marginBottom: '5px' }}>
-                <span>Valor Investido: </span>
-                <strong>{value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}</strong>
-              </div>
-              <div style={{ fontSize: '14px', marginBottom: '5px' }}>
-                <span>Valor Atual: </span>
-                <strong>{currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}</strong>
-              </div>
-              <div style={{ 
-                fontSize: '14px', 
-                color: diff >= 0 ? '#28a745' : '#dc3545',
-                fontWeight: 'bold'
-              }}>
-                {diff >= 0 ? '+' : ''}{diff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency} ({percentChange >= 0 ? '+' : ''}{percentChange.toFixed(2)}%)
-              </div>
-            </div>
-          );
-        })}
+              ({totalProfitLossPercentage >= 0 ? '+' : ''}{totalProfitLossPercentage.toFixed(2)}%)
+            </span>
+          </div>
+          <div style={{ fontSize: '12px', color: isDark ? '#888' : '#555' }}>
+            Desempenho da carteira
+          </div>
+        </div>
       </div>
       
-      {/* Ativos em EUR */}
-      {sortedEurAssets.length > 0 && (
-        <div style={{ marginBottom: '30px' }}>
-          <h4>Ativos em EUR</h4>
-          {loading ? (
-            <p>Carregando ativos...</p>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={tableStyle}>
-                <thead>
-                  <tr>
-                    <th style={headerCellStyle}>Ativo</th>
-                    <th style={headerCellStyle}>Descrição</th>
-                    <th style={headerCellStyle}>Quantidade</th>
-                    <th style={headerCellStyle}>Preço Compra</th>
-                    <th style={headerCellStyle}>Preço Atual</th>
-                    <th style={headerCellStyle}>Total Investido</th>
-                    <th style={headerCellStyle}>Total Atual</th>
-                    <th style={headerCellStyle}>Variação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedEurAssets.map(asset => (
-                    <tr key={asset.asset}>
-                      <td style={cellStyle}><strong>{asset.asset}</strong></td>
-                      <td style={cellStyle}>{asset.description}</td>
-                      <td style={cellStyle}>{asset.quantity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}</td>
-                      <td style={cellStyle}>{asset.currency} {asset.originalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td style={cellStyle}>
-                        {asset.currentPrice !== null 
-                          ? `${asset.currency} ${asset.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
-                          : <span style={{ color: isDark ? '#dc3545' : '#dc3545' }}>Indisponível</span>}
-                      </td>
-                      <td style={cellStyle}>{asset.currency} {asset.originalTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td style={cellStyle}>
-                        {asset.currentTotal !== null 
-                          ? `${asset.currency} ${asset.currentTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
-                          : <span style={{ color: isDark ? '#dc3545' : '#dc3545' }}>Indisponível</span>}
-                      </td>
-                      <td style={{
-                        ...cellStyle,
-                        color: asset.percentChange !== null 
-                          ? (asset.percentChange > 0 
-                            ? '#28a745' 
-                            : (asset.percentChange < 0 ? '#dc3545' : 'inherit'))
-                          : 'inherit'
-                      }}>
-                        {asset.percentChange !== null 
-                          ? `${asset.percentChange > 0 ? '+' : ''}${asset.percentChange.toFixed(2)}%` 
-                          : 'N/A'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
+      {/* Resumo dos totais em um acordeão */}
+      <div style={{ marginBottom: '20px' }}>
+        <button 
+          onClick={() => togglePanel('totals')}
+          style={{
+            width: '100%',
+            padding: '12px 15px',
+            backgroundColor: isDark ? '#333' : '#e9ecef',
+            color: isDark ? '#fff' : '#333',
+            border: `1px solid ${isDark ? '#444' : '#ddd'}`,
+            borderRadius: '8px',
+            cursor: 'pointer',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            marginBottom: openPanel === 'totals' ? '10px' : '0'
+          }}
+        >
+          <span>Resumo por Moeda</span>
+          <span>{openPanel === 'totals' ? '▲' : '▼'}</span>
+        </button>
+        
+        {openPanel === 'totals' && (
+          <div style={{ 
+            display: 'flex', 
+            flexWrap: 'wrap', 
+            gap: '15px', 
+            marginBottom: '20px',
+            padding: '15px',
+            backgroundColor: isDark ? '#333' : '#e9ecef',
+            borderRadius: '0 0 8px 8px',
+            border: `1px solid ${isDark ? '#444' : '#ddd'}`,
+            borderTop: 'none'
+          }}>
+            {Object.entries(totals.originalTotal).map(([currency, value]) => {
+              const currentValue = totals.currentTotal[currency as keyof typeof totals.currentTotal];
+              const diff = currentValue - value;
+              const percentChange = value > 0 ? (diff / value) * 100 : 0;
+              
+              // Só mostrar se houver algum valor
+              if (value === 0) return null;
+              
+              return (
+                <div key={currency} style={{ 
+                  flex: '1', 
+                  minWidth: '250px',
+                  padding: '15px',
+                  borderRadius: '8px',
+                  backgroundColor: isDark ? '#2d2d2d' : 'white',
+                  border: `1px solid ${isDark ? '#444' : '#ddd'}`
+                }}>
+                  <h4 style={{ margin: '0 0 10px 0' }}>{currency}</h4>
+                  <div style={{ fontSize: '14px', marginBottom: '5px' }}>
+                    <span>Valor Investido: </span>
+                    <strong>{value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}</strong>
+                  </div>
+                  <div style={{ fontSize: '14px', marginBottom: '5px' }}>
+                    <span>Valor Atual: </span>
+                    <strong>{currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency}</strong>
+                  </div>
+                  <div style={{ 
+                    fontSize: '14px', 
+                    color: diff >= 0 ? '#28a745' : '#dc3545',
+                    fontWeight: 'bold'
+                  }}>
+                    {diff >= 0 ? '+' : ''}{diff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {currency} ({percentChange >= 0 ? '+' : ''}{percentChange.toFixed(2)}%)
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
       
-      {/* Ativos em USD */}
-      {sortedUsdAssets.length > 0 && (
-        <div style={{ marginBottom: '30px' }}>
-          <h4>Ativos em USD</h4>
-          {loading ? (
-            <p>Carregando ativos...</p>
+      {/* Painéis acordeão agrupados por moeda */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '20px' }}>Carregando investimentos...</div>
+      ) : (
+        <div>
+          {assetPrices.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '20px' }}>Nenhum investimento encontrado.</div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={tableStyle}>
-                <thead>
-                  <tr>
-                    <th style={headerCellStyle}>Ativo</th>
-                    <th style={headerCellStyle}>Descrição</th>
-                    <th style={headerCellStyle}>Quantidade</th>
-                    <th style={headerCellStyle}>Preço Compra</th>
-                    <th style={headerCellStyle}>Preço Atual</th>
-                    <th style={headerCellStyle}>Total Investido</th>
-                    <th style={headerCellStyle}>Total Atual</th>
-                    <th style={headerCellStyle}>Variação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedUsdAssets.map(asset => (
-                    <tr key={asset.asset}>
-                      <td style={cellStyle}><strong>{asset.asset}</strong></td>
-                      <td style={cellStyle}>{asset.description}</td>
-                      <td style={cellStyle}>{asset.quantity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}</td>
-                      <td style={cellStyle}>{asset.currency} {asset.originalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td style={cellStyle}>
-                        {asset.currentPrice !== null 
-                          ? `${asset.currency} ${asset.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
-                          : <span style={{ color: isDark ? '#dc3545' : '#dc3545' }}>Indisponível</span>}
-                      </td>
-                      <td style={cellStyle}>{asset.currency} {asset.originalTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td style={cellStyle}>
-                        {asset.currentTotal !== null 
-                          ? `${asset.currency} ${asset.currentTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
-                          : <span style={{ color: isDark ? '#dc3545' : '#dc3545' }}>Indisponível</span>}
-                      </td>
-                      <td style={{
-                        ...cellStyle,
-                        color: asset.percentChange !== null 
-                          ? (asset.percentChange > 0 
-                            ? '#28a745' 
-                            : (asset.percentChange < 0 ? '#dc3545' : 'inherit'))
-                          : 'inherit'
+            // Agrupar investimentos por moeda
+            Object.entries(groupedAssets).map(([currency, currencyAssets]) => {
+              const sortedAssets = sortAssets(currencyAssets);
+              
+              return (
+                <div key={currency} style={{ marginBottom: '15px' }}>
+                  <button 
+                    onClick={() => togglePanel(currency)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 15px',
+                      backgroundColor: isDark ? '#333' : '#e9ecef',
+                      color: isDark ? '#fff' : '#333',
+                      border: `1px solid ${isDark ? '#444' : '#ddd'}`,
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      fontSize: '16px',
+                      fontWeight: 'bold',
+                      marginBottom: openPanel === currency ? '10px' : '0'
+                    }}
+                  >
+                    <span>Investimentos em {currency} ({currencyAssets.length})</span>
+                    <span>{openPanel === currency ? '▲' : '▼'}</span>
+                  </button>
+                  
+                  {openPanel === currency && (
+                    <div style={{ 
+                      padding: '15px',
+                      backgroundColor: isDark ? '#333' : '#f8f9fa',
+                      borderRadius: '0 0 8px 8px',
+                      border: `1px solid ${isDark ? '#444' : '#ddd'}`,
+                      borderTop: 'none'
+                    }}>
+                      <table style={{ 
+                        width: '100%', 
+                        borderCollapse: 'collapse',
+                        fontSize: '14px'
                       }}>
-                        {asset.percentChange !== null 
-                          ? `${asset.percentChange > 0 ? '+' : ''}${asset.percentChange.toFixed(2)}%` 
-                          : 'N/A'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-      
-      {/* Ativos em BRL */}
-      {sortedBrlAssets.length > 0 && (
-        <div style={{ marginBottom: '30px' }}>
-          <h4>Ativos em BRL</h4>
-          {loading ? (
-            <p>Carregando ativos...</p>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={tableStyle}>
-                <thead>
-                  <tr>
-                    <th style={headerCellStyle}>Ativo</th>
-                    <th style={headerCellStyle}>Descrição</th>
-                    <th style={headerCellStyle}>Quantidade</th>
-                    <th style={headerCellStyle}>Preço Compra</th>
-                    <th style={headerCellStyle}>Preço Atual</th>
-                    <th style={headerCellStyle}>Total Investido</th>
-                    <th style={headerCellStyle}>Total Atual</th>
-                    <th style={headerCellStyle}>Variação</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedBrlAssets.map(asset => (
-                    <tr key={asset.asset}>
-                      <td style={cellStyle}><strong>{asset.asset}</strong></td>
-                      <td style={cellStyle}>{asset.description}</td>
-                      <td style={cellStyle}>{asset.quantity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}</td>
-                      <td style={cellStyle}>{asset.currency} {asset.originalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td style={cellStyle}>
-                        {asset.currentPrice !== null 
-                          ? `${asset.currency} ${asset.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
-                          : <span style={{ color: isDark ? '#dc3545' : '#dc3545' }}>Indisponível</span>}
-                      </td>
-                      <td style={cellStyle}>{asset.currency} {asset.originalTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                      <td style={cellStyle}>
-                        {asset.currentTotal !== null 
-                          ? `${asset.currency} ${asset.currentTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
-                          : <span style={{ color: isDark ? '#dc3545' : '#dc3545' }}>Indisponível</span>}
-                      </td>
-                      <td style={{
-                        ...cellStyle,
-                        color: asset.percentChange !== null 
-                          ? (asset.percentChange > 0 
-                            ? '#28a745' 
-                            : (asset.percentChange < 0 ? '#dc3545' : 'inherit'))
-                          : 'inherit'
-                      }}>
-                        {asset.percentChange !== null 
-                          ? `${asset.percentChange > 0 ? '+' : ''}${asset.percentChange.toFixed(2)}%` 
-                          : 'N/A'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                        <thead>
+                          <tr>
+                            <th style={tableHeaderStyle}>Ativo</th>
+                            <th style={tableHeaderStyle}>Quantidade</th>
+                            <th style={tableHeaderStyle}>Preço Original</th>
+                            <th style={tableHeaderStyle}>Preço Atual</th>
+                            <th style={tableHeaderStyle}>Variação</th>
+                            <th style={tableHeaderStyle}>Total</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {sortedAssets.map((assetPrice) => {
+                            const totalValue = assetPrice.currentTotal !== null ? assetPrice.currentTotal : assetPrice.originalTotal;
+                            const diff = totalValue - assetPrice.originalTotal;
+                            const percentDiff = assetPrice.originalTotal > 0 ? (diff / assetPrice.originalTotal) * 100 : 0;
+                            
+                            return (
+                              <tr key={assetPrice.asset} style={{ borderBottom: `1px solid ${isDark ? '#444' : '#dee2e6'}` }}>
+                                <td style={tableCellStyle}>
+                                  <div style={{ fontWeight: 'bold' }}>{assetPrice.asset}</div>
+                                  <div style={{ fontSize: '12px', color: isDark ? '#aaa' : '#6c757d' }}>{assetPrice.description}</div>
+                                </td>
+                                <td style={tableCellStyle}>{assetPrice.quantity.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}</td>
+                                <td style={tableCellStyle}>
+                                  {assetPrice.originalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {assetPrice.currency}
+                                </td>
+                                <td style={tableCellStyle}>
+                                  {assetPrice.currentPrice !== null 
+                                    ? `${assetPrice.currentPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${assetPrice.currency}` 
+                                    : `${assetPrice.originalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${assetPrice.currency}`}
+                                </td>
+                                <td style={{
+                                  ...tableCellStyle,
+                                  color: assetPrice.percentChange !== null 
+                                    ? (assetPrice.percentChange > 0 ? '#28a745' : (assetPrice.percentChange < 0 ? '#dc3545' : 'inherit'))
+                                    : 'inherit'
+                                }}>
+                                  {assetPrice.percentChange !== null 
+                                    ? `${assetPrice.percentChange > 0 ? '+' : ''}${assetPrice.percentChange.toFixed(2)}%` 
+                                    : '0.00%'}
+                                </td>
+                                <td style={tableCellStyle}>
+                                  <div>
+                                    {totalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {assetPrice.currency}
+                                  </div>
+                                  <div style={{ 
+                                    fontSize: '12px',
+                                    color: diff >= 0 ? '#28a745' : '#dc3545',
+                                    fontWeight: 'bold'
+                                  }}>
+                                    {diff >= 0 ? '+' : ''}{diff.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({percentDiff.toFixed(2)}%)
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
       )}
