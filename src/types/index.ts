@@ -29,10 +29,9 @@ export interface Investment {
 
 export interface TravelFund {
   _id?: string;
-  userId: string;
   name: string;
-  description: string;
-  amount: number;
-  type: 'income' | 'expense';
+  participants: { userId: string; contribution: number }[];
+  total: number;
+  currency: string;
   createdAt?: Date;
 }
