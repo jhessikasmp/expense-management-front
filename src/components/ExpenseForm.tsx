@@ -97,22 +97,13 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ currentUser, onExpense
     { value: 'xbox', label: 'Xbox' },
     { value: 'telefone', label: 'Telefone' },
     { value: 'boleto', label: 'Boletos' },
-    { value: 'financiamento', label: 'Financiamento' },
     { value: 'cursos', label: 'Cursos' },
     { value: 'outros', label: 'Outros' },
-    { value: 'fundo_viagem', label: '✈️ Fundo de Viagem' },
-    { value: 'fundo_emergencia', label: '🆘 Fundo de Emergência' },
-    { value: 'reserva_carro', label: '🚗 Reserva do Carro' },
-    { value: 'mesada', label: '💰 Mesada' },
-    { value: 'investimentos', label: '📈 Investimentos' }
+
   ];
 
   const formStyle = {
-    marginBottom: '20px',
-    padding: '25px',
-    backgroundColor: '#fff5f5',
-    borderRadius: '10px',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+    marginBottom: '20px'
   };
 
   const inputStyle = {

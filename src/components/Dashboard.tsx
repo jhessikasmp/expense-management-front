@@ -42,12 +42,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser }) => {
       
       const monthlyExpenses = isAdmin ? allMonthlyExpenses : allMonthlyExpenses.filter(expense => expense.userId === currentUser._id);
       const userInvestments = isAdmin ? investmentsRes.data : investmentsRes.data.filter(inv => inv.userId === currentUser._id);
-      const userFunds = fundsRes.data;
       const userSalaries = isAdmin ? salariesRes.data : salariesRes.data.filter((salary: any) => salary.userId === currentUser._id);
       
       setExpenses(monthlyExpenses);
       setInvestments(userInvestments);
-      setTravelFunds(userFunds);
+      setTravelFunds(fundsRes.data);
       setMonthlySalaries(userSalaries);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);

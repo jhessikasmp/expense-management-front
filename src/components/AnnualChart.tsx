@@ -65,12 +65,13 @@ export const AnnualChart: React.FC = () => {
   }, []);
 
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-  const maxExpense = Math.max(...data.map(d => Math.abs(d.expenses)));
+  // Proteger contra array vazio com fallback para 1 (evitar divisão por zero)
+  const maxExpense = data.length > 0 ? Math.max(...data.map(d => Math.abs(d.expenses))) : 1;
 
   // Calcular saldo (incluindo todas as transações)
   const totalSalaries = salaries.reduce((sum, salary) => sum + salary.amount, 0);
-  const totalExpenses = Math.abs(expenses.reduce((sum, expense) => sum + Math.abs(expense.amount), 0));
-  const balance = totalSalaries - totalExpenses;
+  const totalExpenses = expenses.reduce((sum, expense) => sum + Math.abs(expense.amount), 0);
+  // const balance = totalSalaries - totalExpenses;
 
   return (
     <div style={{ 
@@ -90,12 +91,6 @@ export const AnnualChart: React.FC = () => {
           <h4>Despesas Anuais (até agora)</h4>
           <p style={{ fontSize: '20px', fontWeight: 'bold' }}>€{totalExpenses.toFixed(2)}</p>
         </div>
-        <div style={{ padding: '15px', backgroundColor: balance >= 0 ? (isDark ? '#166534' : '#d4edda') : (isDark ? '#991b1b' : '#f8d7da'), borderRadius: '6px', textAlign: 'center' }}>
-          <h4>Saldo Anual (restante)</h4>
-          <p style={{ fontSize: '20px', fontWeight: 'bold', color: balance >= 0 ? '#28a745' : '#dc3545' }}>
-            €{balance.toFixed(2)}
-          </p>
-        </div>
       </div>
       
       <div style={{ marginBottom: '30px' }}>
@@ -106,14 +101,10 @@ export const AnnualChart: React.FC = () => {
             const userSalaries = salaries
               .filter(s => s.userId === user._id)
               .reduce((sum, s) => sum + s.amount, 0);
-            
             // Usar todas as despesas deste usuário
             const userExpenses = expenses
               .filter(e => e.userId === user._id)
               .reduce((sum, e) => sum + Math.abs(e.amount), 0);
-            
-            const userBalance = userSalaries - userExpenses;
-            
             return (
               <div key={user._id} style={{
                 padding: '20px',
@@ -132,17 +123,6 @@ export const AnnualChart: React.FC = () => {
                   <span style={{ fontSize: '14px', color: isDark ? '#ccc' : '#666' }}>Despesas Anuais:</span>
                   <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#dc3545', margin: '5px 0' }}>
                     €{userExpenses.toFixed(2)}
-                  </p>
-                </div>
-                <div>
-                  <span style={{ fontSize: '14px', color: isDark ? '#ccc' : '#666' }}>Saldo Final:</span>
-                  <p style={{ 
-                    fontSize: '20px', 
-                    fontWeight: 'bold', 
-                    color: userBalance >= 0 ? '#28a745' : '#dc3545',
-                    margin: '5px 0'
-                  }}>
-                    €{userBalance.toFixed(2)}
                   </p>
                 </div>
               </div>
@@ -165,29 +145,35 @@ export const AnnualChart: React.FC = () => {
           minWidth: window.innerWidth <= 768 ? '600px' : 'auto',
           paddingBottom: '5px'
         }}>
-          {data.map((item, index) => (
-            <div key={item.month} style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center',
-              flex: 1,
-              minWidth: '30px'
-            }}>
-              <div style={{
-                height: `${(Math.abs(item.expenses) / maxExpense) * 150}px`,
-                backgroundColor: isDark ? '#4a90e2' : '#007bff',
-                width: '100%',
-                borderRadius: '4px 4px 0 0',
-                minHeight: '5px'
-              }}></div>
-              <small style={{ marginTop: '5px', fontSize: '12px' }}>
-                {months[index]}
-              </small>
-              <small style={{ fontSize: '10px', color: isDark ? '#ccc' : '#666' }}>
-                €{Math.abs(item.expenses).toFixed(0)}
-              </small>
+          {data.length > 0 ? (
+            data.map((item, index) => (
+              <div key={index} style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center',
+                flex: 1,
+                minWidth: '30px'
+              }}>
+                <div style={{
+                  height: `${(Math.abs(item.expenses) / maxExpense) * 150}px`,
+                  backgroundColor: isDark ? '#4a90e2' : '#007bff',
+                  width: '100%',
+                  borderRadius: '4px 4px 0 0',
+                  minHeight: '5px'
+                }}></div>
+                <small style={{ marginTop: '5px', fontSize: '12px' }}>
+                  {months[item.month - 1]}
+                </small>
+                <small style={{ fontSize: '10px', color: isDark ? '#ccc' : '#666' }}>
+                  €{Math.abs(item.expenses).toFixed(0)}
+                </small>
+              </div>
+            ))
+          ) : (
+            <div style={{ textAlign: 'center', width: '100%' }}>
+              <p>Carregando dados ou nenhum dado disponível para 2025</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>
