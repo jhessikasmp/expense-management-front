@@ -3,6 +3,7 @@ import { User } from '../types';
 import { fundService } from '../services/api';
 import { useTheme } from './ThemeProvider';
 import MonthlyContributionsPanel from './MonthlyContributionsPanel';
+import FundEntryForm from './FundEntryForm';
 
 interface FundEntry {
   _id?: string;
@@ -106,7 +107,29 @@ export const EmergencyFund: React.FC<EmergencyFundProps> = ({ currentUser }) => 
   };
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div className="space-y-6">
+      <h2>Fundo de Emergência</h2>
+      
+      <FundEntryForm
+        fundId="emergency"
+        userId={currentUser._id}
+        onSubmit={async (entry) => {
+          try {
+            await fundService.create({
+              userId: currentUser._id,
+              amount: entry.amount,
+              description: entry.description,
+              type: 'income',
+              category: 'emergency'
+            });
+            await loadEntries(); // Recarrega os dados do fundo
+          } catch (err) {
+            console.error('Erro ao adicionar entrada:', err);
+          }
+        }}
+        onError={(err) => console.error('Erro no formulário:', err)}
+      />
+
       <div style={{ 
         display: 'grid', 
         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 

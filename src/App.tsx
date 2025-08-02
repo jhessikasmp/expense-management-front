@@ -67,6 +67,16 @@ const AppContent: React.FC = () => {
     transition: 'background-color 0.2s ease'
   });
 
+  const tabs = [
+    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+    { id: 'expenses', label: 'Despesas', icon: '💰' },
+    { id: 'investments', label: 'Investimentos', icon: '📈' },
+    { id: 'travel', label: 'Fundo de Viagem', icon: '✈️' },
+    { id: 'emergency', label: 'Fundo de Emergência', icon: '🏥' },
+    { id: 'car', label: 'Reserva do Carro', icon: '🚗' },
+    { id: 'allowance', label: 'Mesada', icon: '💵' }
+  ];
+
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '1200px', margin: '0 auto', backgroundColor: isDark ? '#1f1f1f' : '#fff', color: isDark ? '#fff' : '#000', minHeight: '100vh' }}>
       <header style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: isDark ? '#121212' : '#007bff', color: 'white' }}>
@@ -135,34 +145,15 @@ const AppContent: React.FC = () => {
             zIndex: 1000,
             boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
           }}>
-            <button style={menuItemStyle('dashboard')} onClick={() => { setActiveTab('dashboard'); setMenuOpen(false); }}>
-              📊 Dashboard
-            </button>
-
-            <button style={menuItemStyle('expenses')} onClick={() => { setActiveTab('expenses'); setMenuOpen(false); }}>
-              💸 Despesas
-            </button>
-            <button style={menuItemStyle('investments')} onClick={() => { setActiveTab('investments'); setMenuOpen(false); }}>
-              💹 Investimentos
-            </button>
-            <button style={menuItemStyle('travel-funds')} onClick={() => { setActiveTab('travel-funds'); setMenuOpen(false); }}>
-              ✈️ Fundos de Viagem
-            </button>
-            <button style={menuItemStyle('emergency-fund')} onClick={() => { setActiveTab('emergency-fund'); setMenuOpen(false); }}>
-              🚨 Fundo de Emergência
-            </button>
-            <button style={menuItemStyle('car-reserve')} onClick={() => { setActiveTab('car-reserve'); setMenuOpen(false); }}>
-              🚗 Reserva para Carro
-            </button>
-            <button style={menuItemStyle('allowance')} onClick={() => { setActiveTab('allowance'); setMenuOpen(false); }}>
-              🎁 Mesada
-            </button>
-            <button style={menuItemStyle('annual-chart')} onClick={() => { setActiveTab('annual-chart'); setMenuOpen(false); }}>
-              📈 Gráfico Anual
-            </button>
-            <button style={menuItemStyle('expense-history')} onClick={() => { setActiveTab('expense-history'); setMenuOpen(false); }}>
-              📋 Histórico de Despesas
-            </button>
+            {tabs.map(tab => (
+              <button 
+                key={tab.id} 
+                style={menuItemStyle(tab.id)} 
+                onClick={() => { setActiveTab(tab.id); setMenuOpen(false); }}
+              >
+                {tab.icon} {tab.label}
+              </button>
+            ))}
           </div>
         </div>
       )}
@@ -176,42 +167,24 @@ const AppContent: React.FC = () => {
         position: 'relative'
       }}>
         <div style={{ display: window.innerWidth <= 768 ? 'none' : 'flex', marginBottom: '20px', borderBottom: `1px solid ${isDark ? '#555' : '#ddd'}` }}>
-          <button style={tabStyle('dashboard')} onClick={() => setActiveTab('dashboard')}>
-            📊 Dashboard
-          </button>
-          <button style={tabStyle('expenses')} onClick={() => setActiveTab('expenses')}>
-            💸 Despesas
-          </button>
-          <button style={tabStyle('investments')} onClick={() => setActiveTab('investments')}>
-            💹 Investimentos
-          </button>
-          <button style={tabStyle('travel-funds')} onClick={() => setActiveTab('travel-funds')}>
-            ✈️ Fundos de Viagem
-          </button>
-          <button style={tabStyle('emergency-fund')} onClick={() => setActiveTab('emergency-fund')}>
-            🚨 Fundo de Emergência
-          </button>
-          <button style={tabStyle('car-reserve')} onClick={() => setActiveTab('car-reserve')}>
-            🚗 Reserva para Carro
-          </button>
-          <button style={tabStyle('allowance')} onClick={() => setActiveTab('allowance')}>
-            🎁 Mesada
-          </button>
-          <button style={tabStyle('annual-chart')} onClick={() => setActiveTab('annual-chart')}>
-            📈 Gráfico Anual
-          </button>
-          <button style={tabStyle('expense-history')} onClick={() => setActiveTab('expense-history')}>
-            📋 Histórico
-          </button>
+          {tabs.map(tab => (
+            <button 
+              key={tab.id} 
+              style={tabStyle(tab.id)} 
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.icon} {tab.label}
+            </button>
+          ))}
         </div>
         
         <div style={{ padding: '20px 0' }}>
           {activeTab === 'dashboard' && <Dashboard key={refreshKey} currentUser={currentUser} />}
           {activeTab === 'expenses' && <ExpenseForm key={refreshKey} currentUser={currentUser} onExpenseCreated={() => setRefreshKey(prev => prev + 1)} />}
           {activeTab === 'investments' && <InvestmentContainer key={refreshKey} currentUser={currentUser} onInvestmentCreated={handleInvestmentCreated} />}
-          {activeTab === 'travel-funds' && <TravelFundForm key={refreshKey} currentUser={currentUser} onTravelFundCreated={() => setRefreshKey(prev => prev + 1)} />}
-          {activeTab === 'emergency-fund' && <EmergencyFund key={refreshKey} currentUser={currentUser} />}
-          {activeTab === 'car-reserve' && <CarReserve key={refreshKey} currentUser={currentUser} />}
+          {activeTab === 'travel' && <TravelFundForm key={refreshKey} currentUser={currentUser} onTravelFundCreated={() => setRefreshKey(prev => prev + 1)} />}
+          {activeTab === 'emergency' && <EmergencyFund key={refreshKey} currentUser={currentUser} />}
+          {activeTab === 'car' && <CarReserve key={refreshKey} currentUser={currentUser} />}
           {activeTab === 'allowance' && <Allowance key={refreshKey} currentUser={currentUser} />}
           {activeTab === 'annual-chart' && <AnnualChart key={refreshKey} />}
           {activeTab === 'expense-history' && <ExpenseHistory currentUser={currentUser} onExpenseUpdated={() => setRefreshKey(prev => prev + 1)} />}
