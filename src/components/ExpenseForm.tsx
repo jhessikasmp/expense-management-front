@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Expense, User } from '../types';
 import { expenseService, fundService } from '../services/api';
 import { useTheme } from '../hooks/useTheme';
