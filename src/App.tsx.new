@@ -207,15 +207,15 @@ const AppContent: React.FC = () => {
         </div>
         
         <div style={{ padding: '20px 0' }}>
-          {activeTab === 'dashboard' && <Dashboard key={refreshKey} currentUser={currentUser} />}
-          {activeTab === 'expenses' && <ExpenseForm key={refreshKey} currentUser={currentUser} onExpenseCreated={() => setRefreshKey(prev => prev + 1)} />}
-          {activeTab === 'investments' && <InvestmentForm key={refreshKey} currentUser={currentUser} onInvestmentCreated={handleInvestmentCreated} />}
-          {activeTab === 'travel-funds' && <TravelFundForm key={refreshKey} currentUser={currentUser} onTravelFundCreated={() => setRefreshKey(prev => prev + 1)} />}
-          {activeTab === 'emergency-fund' && <EmergencyFund key={refreshKey} currentUser={currentUser} />}
-          {activeTab === 'car-reserve' && <CarReserve key={refreshKey} currentUser={currentUser} />}
-          {activeTab === 'allowance' && <Allowance key={refreshKey} currentUser={currentUser} />}
+          {activeTab === 'dashboard' && <Dashboard key={refreshKey} />}
+          {activeTab === 'expenses' && <ExpenseForm key={refreshKey} onExpenseCreated={() => setRefreshKey(prev => prev + 1)} />}
+          {activeTab === 'investments' && <InvestmentForm key={refreshKey} onInvestmentCreated={handleInvestmentCreated} />}
+          {activeTab === 'travel-funds' && <TravelFundForm key={refreshKey} onTravelFundCreated={() => setRefreshKey(prev => prev + 1)} />}
+          {activeTab === 'emergency-fund' && <EmergencyFund key={refreshKey} />}
+          {activeTab === 'car-reserve' && <CarReserve key={refreshKey} />}
+          {activeTab === 'allowance' && <Allowance key={refreshKey} />}
           {activeTab === 'annual-chart' && <AnnualChart key={refreshKey} />}
-          {activeTab === 'expense-history' && <ExpenseHistory currentUser={currentUser} onExpenseUpdated={() => setRefreshKey(prev => prev + 1)} />}
+          {activeTab === 'expense-history' && <ExpenseHistory />}
           {activeTab === 'investments' && <InvestmentPanel key={refreshKey} />}
         </div>
       </div>

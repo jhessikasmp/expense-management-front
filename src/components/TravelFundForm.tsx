@@ -15,9 +15,10 @@ interface TravelEntry {
 
 interface TravelFundFormProps {
   currentUser: User;
+  onTravelFundCreated?: () => void;
 }
 
-export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) => {
+export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser, onTravelFundCreated }) => {
   const [entries, setEntries] = useState<TravelEntry[]>([]);
 
   useEffect(() => {
@@ -47,6 +48,9 @@ export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser }) =
         category: 'travel'
       });
       loadEntries();
+      if (onTravelFundCreated) {
+        onTravelFundCreated();
+      }
     } catch (error) {
       console.error('Erro ao salvar entrada:', error);
     }
