@@ -27,6 +27,17 @@ export interface Investment {
   createdAt?: Date;
 }
 
+export interface MonthlyContribution {
+  _id?: string;
+  userId: string;
+  fundId: string;
+  amount: number;
+  dayOfMonth: number;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface TravelFund {
   _id?: string;
   name: string;

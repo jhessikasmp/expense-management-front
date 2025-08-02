@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { TravelFund, User } from '../types';
 import { travelFundService } from '../services/api';
 import { useTheme } from './ThemeProvider';
+import MonthlyContributionsPanel from './MonthlyContributionsPanel';
 
 interface TravelFundPanelProps {
   users: User[];
@@ -9,6 +10,7 @@ interface TravelFundPanelProps {
 
 export const TravelFundPanel: React.FC<TravelFundPanelProps> = ({ users }) => {
   const [funds, setFunds] = useState<TravelFund[]>([]);
+  const [showMonthlyPanel, setShowMonthlyPanel] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     participants: [{ userId: '', contribution: 0 }],
@@ -164,7 +166,39 @@ export const TravelFundPanel: React.FC<TravelFundPanelProps> = ({ users }) => {
         </button>
       </form>
 
-      <div>
+      <div style={{ marginTop: '20px', marginBottom: '20px' }}>
+        <button
+          type="button"
+          onClick={() => setShowMonthlyPanel(!showMonthlyPanel)}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: isDark ? '#3d3d3d' : '#f0f0f0',
+            color: isDark ? '#fff' : '#000',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            width: '100%',
+            textAlign: 'left',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}
+        >
+          <span>Contribuições Mensais</span>
+          <span>{showMonthlyPanel ? '▼' : '▶'}</span>
+        </button>
+        
+        {showMonthlyPanel && (
+          <div style={{ marginTop: '10px', padding: '15px', backgroundColor: isDark ? '#2d2d2d' : '#fff' }}>
+            <MonthlyContributionsPanel
+              userId={users[0]._id!}
+              fundId="travel"
+            />
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: 'none' }}>
         <h3>Fundos Existentes</h3>
         {funds.map(fund => (
           <div key={fund._id} style={{ 

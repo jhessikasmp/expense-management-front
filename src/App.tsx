@@ -3,9 +3,8 @@ import { Dashboard } from './components/Dashboard';
 import { Login } from './components/Login';
 import { ExpenseForm } from './components/ExpenseForm';
 import { ExpenseHistory } from './components/ExpenseHistory';
-import { InvestmentForm } from './components/InvestmentForm';
+import { InvestmentContainer } from './components/InvestmentContainer';
 import { AnnualChart } from './components/AnnualChart';
-import { InvestmentPanel } from './components/InvestmentPanel';
 import { TravelFundForm } from './components/TravelFundForm';
 import { EmergencyFund } from './components/EmergencyFund';
 import { CarReserve } from './components/CarReserve';
@@ -209,14 +208,13 @@ const AppContent: React.FC = () => {
         <div style={{ padding: '20px 0' }}>
           {activeTab === 'dashboard' && <Dashboard key={refreshKey} currentUser={currentUser} />}
           {activeTab === 'expenses' && <ExpenseForm key={refreshKey} currentUser={currentUser} onExpenseCreated={() => setRefreshKey(prev => prev + 1)} />}
-          {activeTab === 'investments' && <InvestmentForm key={refreshKey} currentUser={currentUser} onInvestmentCreated={handleInvestmentCreated} />}
+          {activeTab === 'investments' && <InvestmentContainer key={refreshKey} currentUser={currentUser} onInvestmentCreated={handleInvestmentCreated} />}
           {activeTab === 'travel-funds' && <TravelFundForm key={refreshKey} currentUser={currentUser} onTravelFundCreated={() => setRefreshKey(prev => prev + 1)} />}
           {activeTab === 'emergency-fund' && <EmergencyFund key={refreshKey} currentUser={currentUser} />}
           {activeTab === 'car-reserve' && <CarReserve key={refreshKey} currentUser={currentUser} />}
           {activeTab === 'allowance' && <Allowance key={refreshKey} currentUser={currentUser} />}
           {activeTab === 'annual-chart' && <AnnualChart key={refreshKey} />}
           {activeTab === 'expense-history' && <ExpenseHistory currentUser={currentUser} onExpenseUpdated={() => setRefreshKey(prev => prev + 1)} />}
-          {activeTab === 'investments' && <InvestmentPanel key={refreshKey} />}
         </div>
       </div>
     </div>

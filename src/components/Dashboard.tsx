@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { User, Expense, Investment, TravelFund } from '../types';
-import { userService, expenseService, investmentService, fundService, salaryService } from '../services/api';
+import { expenseService, investmentService, fundService, salaryService } from '../services/api';
 import { useTheme } from './ThemeProvider';
 
 interface DashboardProps {
@@ -16,9 +16,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser }) => {
 
   const loadData = useCallback(async () => {
     try {
-      // Use sempre 2025 como ano de referência
-      const targetYear = 2025;
-      const currentMonth = new Date().getMonth() + 1;
+      // Usar o ano atual como referência
+      const currentDate = new Date();
+      const targetYear = currentDate.getFullYear();
+      const currentMonth = currentDate.getMonth() + 1;
       
       // Admin users veem todos os dados (IDs específicos)
       const adminIds = ['6884f1b07f0be3c02772d85c', '6884f319e268d1d9a7613530']; // Antonio e Jhessika
@@ -54,15 +55,17 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser }) => {
     loadData();
   }, [loadData]);
 
-  const currentMonth = new Date().getMonth() + 1;
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth() + 1;
+  const targetYear = currentDate.getFullYear();
   const totalExpenses = Math.abs(expenses.reduce((sum, expense) => sum + expense.amount, 0));
   const totalInvestments = investments.reduce((sum, inv) => sum + (inv.quantity * inv.unitPrice), 0);
   const totalTravelFunds = travelFunds
     .filter(fund => {
       const fundDate = new Date(fund.createdAt!);
-      return fundDate.getMonth() + 1 === currentMonth && fundDate.getFullYear() === 2025;
+      return fundDate.getMonth() + 1 === currentMonth && fundDate.getFullYear() === targetYear;
     })
-    .reduce((sum, fund) => sum + fund.amount, 0);
+    .reduce((sum, fund) => sum + fund.total, 0);
   const totalMonthlySalaries = monthlySalaries
     .filter(salary => salary.month === currentMonth)
     .reduce((sum, salary) => sum + salary.amount, 0);

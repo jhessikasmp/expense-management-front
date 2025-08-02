@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { User, Expense, Investment, TravelFund } from '../types';
+import { User, Expense, Investment, TravelFund, MonthlyContribution } from '../types';
 
 const API_BASE_URL = 'https://expense-management-back.onrender.com/api';
 
@@ -48,7 +48,19 @@ export const travelFundService = {
 export const fundService = {
   create: (fund: any) => api.post('/funds', fund),
   list: (userId?: string, category?: string) => api.get('/funds', { params: { userId, category } }),
-  delete: (id: string) => api.delete(`/funds/${id}`),
+};
+
+export const monthlyContributionService = {
+  create: (contribution: Omit<MonthlyContribution, '_id' | 'createdAt'>) =>
+    api.post<MonthlyContribution>('/monthly-contributions', contribution),
+  list: (userId?: string, fundId?: string) =>
+    api.get<MonthlyContribution[]>('/monthly-contributions', { params: { userId, fundId } }),
+  update: (id: string, contribution: Partial<MonthlyContribution>) =>
+    api.put<MonthlyContribution>(`/monthly-contributions/${id}`, contribution),
+  delete: (id: string) =>
+    api.delete(`/monthly-contributions/${id}`),
+  getActive: (userId?: string) =>
+    api.get<MonthlyContribution[]>('/monthly-contributions/active', { params: { userId } }),
 };
 
 // Serviço para obter preços de ativos financeiros
