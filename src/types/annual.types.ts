@@ -1,5 +1,3 @@
-import { User } from '../shared/types/user.types';
-
 export interface MonthlyData {
   month: number;
   expenses: number;
