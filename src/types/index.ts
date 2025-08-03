@@ -1,3 +1,5 @@
+export type { User } from '../shared/types/user.types';
+
 export interface Expense {
   _id: string;
   userId: string;

@@ -1,4 +1,5 @@
-import { User, Expense, Investment, TravelFund, MonthlySalary } from '../../types';
+import type { User } from '../types/user.types';
+import { Expense, Investment, TravelFund, MonthlySalary } from '../../types';
 
 // Base API Response
 export interface ApiResponse<T> {

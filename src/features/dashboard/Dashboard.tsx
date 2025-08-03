@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { User, Expense, Investment, TravelFund, MonthlySalary } from '../../types';
+import type { User } from '../../shared/types/user.types';
+import { Expense, Investment, TravelFund, MonthlySalary } from '../../types';
 import { useTheme } from '../../shared/components/ThemeProvider';
 import { localStorageService } from '../../shared/services/localStorageService';
 import axios from 'axios';
