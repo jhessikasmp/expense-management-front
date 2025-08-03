@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { MonthlyContribution } from '../../types';
-import { useTheme } from '../../shared/hooks/useTheme';
+import { useTheme } from '../shared/components/ThemeProvider';
 import { localStorageService } from '../../services/localStorageService';
 import MonthlyContributionForm from '../MonthlyContributionForm';
 import { monthlyContributionService } from '../../services/api';

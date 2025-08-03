@@ -1,6 +1,6 @@
 import React, { useEffect, useCallback, useState } from 'react';
 import { User, FundEntry } from '../types';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../../shared/components/ThemeProvider';
 import FundEntryForm from './FundEntryForm';
 import MonthlyContributionsPanel from './MonthlyContributionsPanel';
 import { fundService } from '../services/api';

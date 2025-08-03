@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { User } from '../../../types';
 import { FundContribution } from '../../../types/fundContribution.types';
-import { useTheme } from '../../../shared/hooks/useTheme';
+import { useTheme } from '../../../shared/components/ThemeProvider';
 import { fundContributionService } from '../../../services/fundContributionService';
 import { FundContributionForm } from '../components/FundContributionForm';
 import { FundContributionHistory } from '../components/FundContributionHistory';

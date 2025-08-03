@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Expense, User } from '../types';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../../shared/components/ThemeProvider';
 import { ExpenseHistory } from './ExpenseHistory';
 
 interface ExpenseFormProps {

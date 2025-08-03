@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { User, Expense, Investment, TravelFund, MonthlySalary } from '../../types';
-import { useTheme } from '../../shared/hooks/useTheme';
+import { useTheme } from '../../shared/components/ThemeProvider';
 import { localStorageService } from '../../shared/services/localStorageService';
 import axios from 'axios';
 import { TravelFundListResponse } from '../../shared/types/api.types';

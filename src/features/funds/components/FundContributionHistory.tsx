@@ -1,6 +1,6 @@
 import React from 'react';
 import { FundContribution } from '../../../types/fundContribution.types';
-import { useTheme } from '../../../shared/hooks/useTheme';
+import { useTheme } from '../../../shared/components/ThemeProvider';
 
 interface FundContributionHistoryProps {
   contributions: FundContribution[];

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, FundEntry } from '../types';
-import { useTheme } from '../hooks/useTheme';
+import { useTheme } from '../../shared/components/ThemeProvider';
 import MonthlyContributionsPanel from './MonthlyContributionsPanel';
 import { localStorageService } from '../services/localStorageService';
 

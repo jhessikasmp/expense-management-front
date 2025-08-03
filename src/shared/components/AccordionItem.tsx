@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useTheme } from '../../hooks/useTheme';
+import { useTheme } from './ThemeProvider';
 
 interface AccordionItemProps {
   title: string;

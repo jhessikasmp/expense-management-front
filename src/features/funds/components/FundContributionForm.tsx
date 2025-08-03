@@ -1,6 +1,6 @@
 import React, { useState, ChangeEvent } from 'react';
 import { User } from '../../../types';
-import { useTheme } from '../../../shared/hooks/useTheme';
+import { useTheme } from '../../../shared/components/ThemeProvider';
 
 interface FundContributionFormProps {
   fundId: string;
