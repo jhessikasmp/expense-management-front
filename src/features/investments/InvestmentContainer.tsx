@@ -12,7 +12,7 @@ export const InvestmentContainer: React.FC<InvestmentContainerProps> = ({ curren
   return (
     <div>
       <InvestmentForm currentUser={currentUser} onInvestmentCreated={onInvestmentCreated} />
-      <InvestmentPanel />
+      <InvestmentPanel currentUser={currentUser} />
     </div>
   );
 };

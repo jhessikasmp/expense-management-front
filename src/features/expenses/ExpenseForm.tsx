@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Expense, User } from '../types';
-import { expenseService, fundService } from '../services/api';
 import { useTheme } from '../hooks/useTheme';
 import { ExpenseHistory } from './ExpenseHistory';
 
@@ -19,72 +18,25 @@ export const ExpenseForm: React.FC<ExpenseFormProps> = ({ currentUser, onExpense
     customDate: ''
   });
   const [showHistory, setShowHistory] = useState(false);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Criar despesa normal
-      const expenseData = {
-        ...formData,
+      const newExpense: Expense = {
+        _id: Date.now().toString(), // Generate a simple unique ID
         userId: currentUser._id!,
+        name: formData.name,
+        description: formData.description,
         amount: -Math.abs(Number(formData.amount)),
+        category: formData.category,
         currency: 'EUR',
         createdAt: formData.customDate ? new Date(formData.customDate) : new Date()
       };
       
-      // Remove customDate do objeto antes de enviar
-      const { customDate, ...cleanExpenseData } = expenseData;
-      const response = await expenseService.create(cleanExpenseData);
-
-      // Se for categoria especial, adicionar entrada no fundo correspondente
-      await handleSpecialCategory(formData.category, formData.amount, formData.customDate);
-      
-      onExpenseCreated(response.data);
+      onExpenseCreated(newExpense);
       setFormData({ name: '', description: '', amount: '', category: 'supermercado', customDate: '' });
     } catch (error) {
       console.error('Erro ao criar despesa:', error);
-    }
-  };
-
-  const handleSpecialCategory = async (category: string, amount: string, customDate: string) => {
-    const fundEntry = {
-      userId: currentUser._id!,
-      name: `Transferência: ${formData.name}`,
-      description: `Auto-transferência de despesa: ${formData.description}`,
-      amount: Math.abs(Number(amount)),
-      type: 'income' as const,
-      createdAt: customDate ? new Date(customDate) : new Date()
-    };
-
-    try {
-      let fundCategory = '';
-      switch (category) {
-        case 'fundo_viagem':
-          fundCategory = 'travel';
-          break;
-        case 'fundo_emergencia':
-          fundCategory = 'emergency';
-          break;
-        case 'reserva_carro':
-          fundCategory = 'car';
-          break;
-        case 'mesada':
-          fundCategory = 'allowance';
-          break;
-        case 'investimentos':
-          fundCategory = 'investment';
-          fundEntry.name = `Reserva para Investimentos: ${formData.name}`;
-          fundEntry.description = `Valor reservado para investimentos: ${formData.description}`;
-          break;
-      }
-      
-      if (fundCategory) {
-        await fundService.create({
-          ...fundEntry,
-          category: fundCategory
-        });
-      }
-    } catch (error) {
-      console.error('Erro ao processar categoria especial:', error);
     }
   };
 

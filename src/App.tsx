@@ -1,50 +1,87 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from 'react';
-import { Dashboard } from './components/Dashboard';
-import { Login } from './components/Login';
-import { ExpenseForm } from './components/ExpenseForm';
-import { ExpenseHistory } from './components/ExpenseHistory';
-import { InvestmentContainer } from './components/InvestmentContainer';
+import { Dashboard } from './features/dashboard/Dashboard';
+import { Login } from './features/auth/Login';
+import { ExpensePanel } from './features/expenses/ExpensePanel';
+import { InvestmentContainer } from './features/investments/InvestmentContainer';
 import { AnnualChart } from './components/AnnualChart';
-import { TravelFundForm } from './components/TravelFundForm';
-import { EmergencyFund } from './components/EmergencyFund';
-import { CarReserve } from './components/CarReserve';
+import { TravelFundForm } from './features/funds/TravelFundForm';
+import { EmergencyFund } from './features/funds/EmergencyFund';
+import { CarReserve } from './features/funds/CarReserve';
 import { Allowance } from './components/Allowance';
-import { ThemeProvider, useTheme } from './components/ThemeProvider';
-import { User, Investment } from './types';
+import { ThemeProvider, useTheme } from './shared/components/ThemeProvider';
+import { useUserState } from './shared/hooks/useUserState';
+import { User } from './shared/types/user.types';
+import { Tab, TabId, TabStyle, MenuItemStyle } from './shared/types/navigation.types';
+import { LoginCredentials } from './shared/types/auth.types';
+import {
+  DashboardProps,
+  ExpenseFormProps,
+  ExpenseHistoryProps,
+  InvestmentContainerProps,
+  TravelFundFormProps,
+  EmergencyFundProps,
+  CarReserveProps,
+  AllowanceProps,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  AnnualChartProps
+} from './shared/types/component.types';
 
-const AppContent: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+interface AppContentProps {}
+
+const AppContent: React.FC<AppContentProps> = () => {
+  const [activeTab, setActiveTab] = useState<TabId>('dashboard');
   const [menuOpen, setMenuOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const { isDark, toggleTheme } = useTheme();
-
-  const handleLogin = (user: User) => {
-    setCurrentUser(user);
-    localStorage.setItem('currentUser', JSON.stringify(user));
-  };
-
-  const handleLogout = () => {
-    setCurrentUser(null);
-    localStorage.removeItem('currentUser');
-  };
+  const { currentUser, isLoading, error, login, logout } = useUserState();
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
-    }
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleInvestmentCreated = (investment: Investment) => {
+  const handleInvestmentCreated = () => {
     setRefreshKey(prev => prev + 1);
   };
 
-  if (!currentUser) {
-    return <Login onLogin={handleLogin} />;
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-lg">Carregando...</div>
+      </div>
+    );
   }
 
-  const tabStyle = (tab: string) => ({
+  // Show error state
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-red-600 text-lg">
+          Erro ao carregar usuário: {error.message}
+          <button
+            onClick={() => window.location.reload()}
+            className="ml-4 px-4 py-2 bg-blue-500 text-white rounded"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login screen if no user
+  if (!currentUser) {
+    return <Login onLogin={login} />;
+  }
+
+  const tabStyle = (tab: TabId): TabStyle => ({
     padding: '10px 20px',
     backgroundColor: activeTab === tab ? '#007bff' : (isDark ? '#3d3d3d' : '#f8f9fa'),
     color: activeTab === tab ? 'white' : (isDark ? '#fff' : '#000'),
@@ -53,7 +90,7 @@ const AppContent: React.FC = () => {
     borderRadius: '4px 4px 0 0'
   });
 
-  const menuItemStyle = (tab: string) => ({
+  const menuItemStyle = (tab: TabId): MenuItemStyle => ({
     display: 'block',
     width: '100%',
     padding: '15px 20px',
@@ -61,13 +98,14 @@ const AppContent: React.FC = () => {
     color: activeTab === tab ? 'white' : (isDark ? '#fff' : '#000'),
     border: 'none',
     cursor: 'pointer',
-    textAlign: 'left' as const,
+    textAlign: 'left',
     fontSize: '16px',
     borderBottom: `1px solid ${isDark ? '#555' : '#eee'}`,
-    transition: 'background-color 0.2s ease'
+    transition: 'background-color 0.2s ease',
+    borderRadius: '0'
   });
 
-  const tabs = [
+  const tabs: Tab[] = [
     { id: 'dashboard', label: 'Dashboard', icon: '📊' },
     { id: 'expenses', label: 'Despesas', icon: '💰' },
     { id: 'investments', label: 'Investimentos', icon: '📈' },
@@ -102,7 +140,7 @@ const AppContent: React.FC = () => {
           </div>
           
           <button 
-            onClick={handleLogout}
+            onClick={logout}
             style={{
               padding: '8px 12px',
               backgroundColor: 'transparent',
@@ -118,7 +156,7 @@ const AppContent: React.FC = () => {
           <button 
             onClick={() => setMenuOpen(!menuOpen)}
             style={{
-              display: window.innerWidth <= 768 ? 'block' : 'none',
+              display: isMobile ? 'block' : 'none',
               marginLeft: '15px',
               backgroundColor: 'transparent',
               border: 'none',
@@ -133,7 +171,7 @@ const AppContent: React.FC = () => {
       </header>
       
       {menuOpen && (
-        <div style={{ position: 'relative', zIndex: 1000, display: window.innerWidth <= 768 ? 'block' : 'none' }}>
+        <div style={{ position: 'relative', zIndex: 1000, display: isMobile ? 'block' : 'none' }}>
           <div style={{ 
             position: 'absolute', 
             top: '0', 
@@ -166,7 +204,7 @@ const AppContent: React.FC = () => {
         marginTop: '20px',
         position: 'relative'
       }}>
-        <div style={{ display: window.innerWidth <= 768 ? 'none' : 'flex', marginBottom: '20px', borderBottom: `1px solid ${isDark ? '#555' : '#ddd'}` }}>
+        <div style={{ display: isMobile ? 'none' : 'flex', marginBottom: '20px', borderBottom: `1px solid ${isDark ? '#555' : '#ddd'}` }}>
           {tabs.map(tab => (
             <button 
               key={tab.id} 
@@ -180,14 +218,50 @@ const AppContent: React.FC = () => {
         
         <div style={{ padding: '20px 0' }}>
           {activeTab === 'dashboard' && <Dashboard key={refreshKey} currentUser={currentUser} />}
-          {activeTab === 'expenses' && <ExpenseForm key={refreshKey} currentUser={currentUser} onExpenseCreated={() => setRefreshKey(prev => prev + 1)} />}
-          {activeTab === 'investments' && <InvestmentContainer key={refreshKey} currentUser={currentUser} onInvestmentCreated={handleInvestmentCreated} />}
-          {activeTab === 'travel' && <TravelFundForm key={refreshKey} currentUser={currentUser} onTravelFundCreated={() => setRefreshKey(prev => prev + 1)} />}
-          {activeTab === 'emergency' && <EmergencyFund key={refreshKey} currentUser={currentUser} />}
-          {activeTab === 'car' && <CarReserve key={refreshKey} currentUser={currentUser} />}
-          {activeTab === 'allowance' && <Allowance key={refreshKey} currentUser={currentUser} />}
-          {activeTab === 'annual-chart' && <AnnualChart key={refreshKey} />}
-          {activeTab === 'expense-history' && <ExpenseHistory currentUser={currentUser} onExpenseUpdated={() => setRefreshKey(prev => prev + 1)} />}
+          {activeTab === 'expenses' && (
+            <ExpensePanel 
+              currentUser={currentUser}
+              onExpenseCreated={() => setRefreshKey(prev => prev + 1)}
+              onExpenseUpdated={() => setRefreshKey(prev => prev + 1)}
+            />
+          )}
+          {activeTab === 'investments' && 
+            <InvestmentContainer 
+              key={refreshKey} 
+              currentUser={currentUser} 
+              onInvestmentCreated={handleInvestmentCreated} 
+            />
+          }
+          {activeTab === 'travel' && 
+            <TravelFundForm 
+              key={refreshKey} 
+              currentUser={currentUser} 
+              onTravelFundCreated={() => setRefreshKey(prev => prev + 1)} 
+            />
+          }
+          {activeTab === 'emergency' && 
+            <EmergencyFund 
+              key={refreshKey} 
+              currentUser={currentUser} 
+            />
+          }
+          {activeTab === 'car' && 
+            <CarReserve 
+              key={refreshKey} 
+              currentUser={currentUser} 
+            />
+          }
+          {activeTab === 'allowance' && 
+            <Allowance 
+              key={refreshKey} 
+              currentUser={currentUser} 
+            />
+          }
+          {activeTab === 'annual-chart' && 
+            <AnnualChart 
+              key={refreshKey} 
+            />
+          }
         </div>
       </div>
     </div>

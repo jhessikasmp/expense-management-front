@@ -1,52 +1,17 @@
-import React, { useState, useEffect } from 'react';
-import { User } from '../types';
-import { fundService } from '../services/api';
-import { useTheme } from './ThemeProvider';
+import React, { useEffect, useCallback, useState } from 'react';
+import { User, FundEntry } from '../types';
+import { useTheme } from '../hooks/useTheme';
+import FundEntryForm from './FundEntryForm';
 import MonthlyContributionsPanel from './MonthlyContributionsPanel';
+import { fundService } from '../services/api';
 
-interface FundEntry {
-  _id?: string;
-  userId: string;
-  name: string;
-  description: string;
-  amount: number;
-  type: 'income' | 'expense';
-  createdAt?: Date;
-}
-
-interface CarReserveProps {
+interface EmergencyFundProps {
   currentUser: User;
 }
 
-export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
+export const EmergencyFund: React.FC<EmergencyFundProps> = ({ currentUser }) => {
   const [entries, setEntries] = useState<FundEntry[]>([]);
-
-  useEffect(() => {
-    loadEntries();
-  }, []);
-
-  const loadEntries = async () => {
-    try {
-      const response = await fundService.list(currentUser._id, 'car');
-      setEntries(response.data);
-    } catch (error) {
-      console.error('Erro ao carregar entradas:', error);
-    }
-  };
-
-  const saveEntry = async (newEntry: FundEntry) => {
-    try {
-      await fundService.create({
-        ...newEntry,
-        category: 'car'
-      });
-      loadEntries();
-    } catch (error) {
-      console.error('Erro ao salvar entrada:', error);
-    }
-  };
   const [showMonthlyPanel, setShowMonthlyPanel] = useState(false);
-
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -56,13 +21,40 @@ export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
   const [selectedType, setSelectedType] = useState<string>('');
   const { isDark } = useTheme();
 
+  const loadEntries = useCallback(async () => {
+    try {
+      const entries = await fundService.list(currentUser._id, 'emergency');
+      setEntries(entries.data);
+    } catch (error) {
+      console.error('Erro ao carregar entradas:', error);
+    }
+  }, [currentUser._id]);
+
+  useEffect(() => {
+    loadEntries();
+  }, [loadEntries]);
+
+  const saveEntry = async (newEntry: FundEntry) => {
+    try {
+      await fundService.create({
+        ...newEntry,
+        category: 'emergency'
+      });
+      loadEntries();
+    } catch (error) {
+      console.error('Erro ao salvar entrada:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newEntry: FundEntry = {
-      ...formData,
       userId: currentUser._id!,
       type: 'expense',
       amount: -Math.abs(Number(formData.amount)),
+      category: 'emergency',
+      name: formData.name,
+      description: formData.description,
       createdAt: formData.customDate ? new Date(formData.customDate) : new Date()
     };
     
@@ -77,7 +69,7 @@ export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
   const formStyle = {
     marginBottom: '20px',
     padding: '25px',
-    backgroundColor: isDark ? '#2d2d2d' : '#e3f2fd',
+    backgroundColor: isDark ? '#2d2d2d' : '#e8f5e8',
     borderRadius: '10px',
     boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
   };
@@ -86,7 +78,7 @@ export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
     width: '100%',
     padding: '12px 15px',
     margin: '8px 0',
-    border: `2px solid ${isDark ? '#555' : '#bbdefb'}`,
+    border: `2px solid ${isDark ? '#555' : '#c3e6cb'}`,
     borderRadius: '8px',
     fontSize: '16px',
     backgroundColor: isDark ? '#3d3d3d' : 'white',
@@ -96,7 +88,7 @@ export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
   const buttonStyle = {
     width: '100%',
     padding: '12px',
-    backgroundColor: '#2196f3',
+    backgroundColor: '#28a745',
     color: 'white',
     border: 'none',
     borderRadius: '8px',
@@ -106,7 +98,28 @@ export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
   };
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div className="space-y-6">
+      <h2>Fundo de Emergência</h2>
+      
+      <FundEntryForm
+        fundId="emergency"
+        userId={currentUser._id}
+        onSubmit={(entry: { amount: number; description: string }) => {
+          fundService.create({
+            userId: currentUser._id,
+            amount: entry.amount,
+            description: entry.description,
+            type: 'income',
+            category: 'emergency'
+          })
+          .then(() => loadEntries())
+          .catch((error: any) => {
+            console.error('Erro ao adicionar entrada:', error);
+          });
+        }}
+        onError={(error: Error) => console.error('Erro no formulário:', error)}
+      />
+
       <div style={{ 
         display: 'grid', 
         gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
@@ -115,23 +128,23 @@ export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
       }}>
         <div style={{ 
           padding: '20px', 
-          backgroundColor: isDark ? '#1565c0' : '#e3f2fd',
+          backgroundColor: isDark ? '#166534' : '#d4edda',
           borderRadius: '8px',
           textAlign: 'center'
         }}>
           <h4>Saldo Total</h4>
-          <p style={{ fontSize: '24px', fontWeight: 'bold', color: totalBalance >= 0 ? '#2196f3' : '#dc3545' }}>
+          <p style={{ fontSize: '24px', fontWeight: 'bold', color: totalBalance >= 0 ? '#28a745' : '#dc3545' }}>
             €{totalBalance.toFixed(2)}
           </p>
         </div>
         <div style={{ 
           padding: '20px', 
-          backgroundColor: isDark ? '#3d3d3d' : '#e8f5e8',
+          backgroundColor: isDark ? '#3d3d3d' : '#e3f2fd',
           borderRadius: '8px',
           textAlign: 'center'
         }}>
           <h4>Entradas</h4>
-          <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#28a745' }}>
+          <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#007bff' }}>
             €{totalIncome.toFixed(2)}
           </p>
         </div>
@@ -141,7 +154,7 @@ export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
           borderRadius: '8px',
           textAlign: 'center'
         }}>
-          <h4>Gastos do Carro</h4>
+          <h4>Gastos</h4>
           <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#dc3545' }}>
             €{totalExpenses.toFixed(2)}
           </p>
@@ -149,8 +162,8 @@ export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
       </div>
 
       <form onSubmit={handleSubmit} style={formStyle}>
-        <h3 style={{ marginBottom: '20px', color: isDark ? '#2196f3' : '#1565c0' }}>
-          Reserva do Carro - {currentUser.name}
+        <h3 style={{ marginBottom: '20px', color: isDark ? '#28a745' : '#155724' }}>
+          Fundo de Emergência - {currentUser.name}
         </h3>
         
 
@@ -158,7 +171,7 @@ export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
         <div>
           <input
             type="text"
-            placeholder="Nome (ex: Reserva Mensal, Manutenção, Combustível)"
+            placeholder="Nome (ex: Reserva Mensal, Conserto Urgente)"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             style={inputStyle}
@@ -202,7 +215,7 @@ export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
         </div>
 
         <button type="submit" style={buttonStyle}>
-          Adicionar Gasto do Carro
+          Adicionar Gasto de Emergência
         </button>
       </form>
 
@@ -232,7 +245,7 @@ export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
           <div style={{ marginTop: '10px', padding: '15px', backgroundColor: isDark ? '#2d2d2d' : '#fff' }}>
             <MonthlyContributionsPanel
               userId={currentUser._id!}
-              fundId="car"
+              fundId="emergency"
             />
           </div>
         )}
@@ -272,7 +285,7 @@ export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
               >
                 <span>{type} ({typeEntries.length})</span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 'bold', color: type === 'Entradas' ? '#2196f3' : '#dc3545' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 'bold', color: type === 'Entradas' ? '#28a745' : '#dc3545' }}>
                     €{totalType.toFixed(2)}
                   </span>
                   <span style={{ fontSize: '10px' }}>
@@ -307,7 +320,7 @@ export const CarReserve: React.FC<CarReserveProps> = ({ currentUser }) => {
                           {currentUser.name}
                         </div>
                       </div>
-                      <div style={{ fontSize: '14px', fontWeight: 'bold', color: entry.amount > 0 ? '#2196f3' : '#dc3545', marginLeft: '10px' }}>
+                      <div style={{ fontSize: '14px', fontWeight: 'bold', color: entry.amount > 0 ? '#28a745' : '#dc3545', marginLeft: '10px' }}>
                         {entry.amount > 0 ? '+' : ''}€{entry.amount.toFixed(2)}
                       </div>
                     </div>

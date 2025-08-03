@@ -1,180 +1,162 @@
-import React, { useState, useEffect } from 'react';
-import { useTheme } from './ThemeProvider';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useTheme } from '../shared/components/ThemeProvider';
+import { User } from '../shared/types/user.types';
+import { Salary, Expense } from '../types/annual.types';
 
-interface MonthlyData {
-  month: number;
-  expenses: number;
-  count: number;
+interface UserStats {
+  id: string;
+  name: string;
+  totalSalary: number;
+  totalExpenses: number;
+  balance: number;
 }
 
 export const AnnualChart: React.FC = () => {
-  const [data, setData] = useState<MonthlyData[]>([]);
-  const [salaries, setSalaries] = useState<any[]>([]);
-  const [users, setUsers] = useState<any[]>([]);
-  const [expenses, setExpenses] = useState<any[]>([]);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [users, setUsers] = useState<User[]>([]);
+  const [salaries, setSalaries] = useState<Salary[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { isDark } = useTheme();
 
-  useEffect(() => {
-    const currentYear = 2025; // Ano atual fixo para a aplicação
-    
-    // Carregar dados de despesas para o gráfico (filtrar por 2025 para o gráfico de barras)
-    fetch('https://expense-management-back.onrender.com/api/dashboard/annual')
-      .then(res => res.json())
-      .then(result => {
-        // Filtrar apenas dados de 2025 para o gráfico
-        const data2025 = result.data.filter((monthData: any) => {
-          // O mês está no formato numérico (1-12), então precisamos criar uma data para o primeiro dia desse mês em 2025
-          const date = new Date(2025, monthData.month - 1, 1);
-          return date.getFullYear() === currentYear;
-        });
-        setData(data2025);
-      })
-      .catch(console.error);
-    
-    // Carregar todos os dados de salários
-    fetch(`https://expense-management-back.onrender.com/api/salaries`)
-      .then(res => res.json())
-      .then(result => {
-        // Filtrar salários de 2025
-        const salaries2025 = result.filter((salary: any) => {
-          const salaryDate = new Date(salary.date);
-          return salaryDate.getFullYear() === currentYear;
-        });
-        setSalaries(salaries2025);
-      })
-      .catch(console.error);
-    
-    // Carregar usuários
-    fetch('https://expense-management-back.onrender.com/api/users')
-      .then(res => res.json())
-      .then(result => setUsers(result))
-      .catch(console.error);
-    
-    // Carregar todas as despesas
-    fetch('https://expense-management-back.onrender.com/api/expenses')
-      .then(res => res.json())
-      .then(result => {
-        // Filtrar apenas despesas de 2025
-        const expenses2025 = result.filter((expense: any) => {
-          const expenseDate = new Date(expense.createdAt);
-          return expenseDate.getFullYear() === currentYear;
-        });
-        setExpenses(expenses2025);
-      })
-      .catch(console.error);
+  const years = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 6 }, (_, i) => currentYear - 2 + i);
   }, []);
 
-  const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-  // Proteger contra array vazio com fallback para 1 (evitar divisão por zero)
-  const maxExpense = data.length > 0 ? Math.max(...data.map(d => Math.abs(d.expenses))) : 1;
+  const fetchData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-  // Calcular saldo (incluindo todas as transações)
+      const [usersRes, salariesRes, expensesRes] = await Promise.all([
+        fetch(`/api/users`),
+        fetch(`/api/salaries?year=${selectedYear}`),
+        fetch(`/api/expenses?year=${selectedYear}`)
+      ]);
+
+      if (!usersRes.ok || !salariesRes.ok || !expensesRes.ok) {
+        throw new Error('Failed to fetch data');
+      }
+
+      const [usersData, salariesData, expensesData] = await Promise.all([
+        usersRes.json(),
+        salariesRes.json(),
+        expensesRes.json()
+      ]);
+
+      setUsers(usersData);
+      setSalaries(salariesData);
+      setExpenses(expensesData);
+    } catch (error) {
+      setError('Error fetching data. Please try again later.');
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedYear]);
+
+  useEffect(() => {
+    fetchData();
+  }, [selectedYear, fetchData]);
+
+  const userStats = useMemo(() => {
+    return users.map(user => {
+      const userSalaries = salaries
+        .filter(s => s.userId === user.id)
+        .reduce((sum, s) => sum + s.amount, 0);
+      const userExpenses = expenses
+        .filter(e => e.userId === user.id)
+        .reduce((sum, e) => sum + Math.abs(e.amount), 0);
+      return {
+        id: user.id,
+        name: user.name,
+        totalSalary: userSalaries,
+        totalExpenses: userExpenses,
+        balance: userSalaries - userExpenses
+      };
+    });
+  }, [users, salaries, expenses]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-red-500 p-4 text-center">
+        {error}
+      </div>
+    );
+  }
+
   const totalSalaries = salaries.reduce((sum, salary) => sum + salary.amount, 0);
   const totalExpenses = expenses.reduce((sum, expense) => sum + Math.abs(expense.amount), 0);
-  // const balance = totalSalaries - totalExpenses;
 
   return (
-    <div style={{ 
-      padding: '20px', 
-      backgroundColor: isDark ? '#2d2d2d' : '#f8f9fa',
-      borderRadius: '8px',
-      margin: '20px 0'
-    }}>
-      <h3>Relatório Anual 2025</h3>
-      
-      <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 768 ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
-        <div style={{ padding: '15px', backgroundColor: isDark ? '#1565c0' : '#e3f2fd', borderRadius: '6px', textAlign: 'center' }}>
-          <h4>Salário Anual (até agora)</h4>
-          <p style={{ fontSize: '20px', fontWeight: 'bold' }}>€{totalSalaries.toFixed(2)}</p>
+    <div className={`p-6 rounded-lg ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Financial Overview {selectedYear}</h2>
+        <select
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(Number(e.target.value))}
+          className={`rounded-md px-3 py-2 ${
+            isDark 
+              ? 'bg-gray-700 text-white border-gray-600' 
+              : 'bg-white text-gray-800 border-gray-300'
+          }`}
+        >
+          {years.map(year => (
+            <option key={year} value={year}>{year}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div className={`p-6 rounded-lg ${isDark ? 'bg-blue-900' : 'bg-blue-50'}`}>
+          <h3 className="text-lg font-medium mb-2">Total Annual Salary</h3>
+          <p className="text-2xl font-bold text-blue-500">€{totalSalaries.toFixed(2)}</p>
         </div>
-        <div style={{ padding: '15px', backgroundColor: isDark ? '#991b1b' : '#ffe4e1', borderRadius: '6px', textAlign: 'center' }}>
-          <h4>Despesas Anuais (até agora)</h4>
-          <p style={{ fontSize: '20px', fontWeight: 'bold' }}>€{totalExpenses.toFixed(2)}</p>
+        <div className={`p-6 rounded-lg ${isDark ? 'bg-red-900' : 'bg-red-50'}`}>
+          <h3 className="text-lg font-medium mb-2">Total Annual Expenses</h3>
+          <p className="text-2xl font-bold text-red-500">€{totalExpenses.toFixed(2)}</p>
         </div>
       </div>
-      
-      <div style={{ marginBottom: '30px' }}>
-        <h4>Resumo por Usuário</h4>
-        <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 768 ? '1fr' : 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-          {users.map(user => {
-            // Usar todos os salários deste usuário
-            const userSalaries = salaries
-              .filter(s => s.userId === user._id)
-              .reduce((sum, s) => sum + s.amount, 0);
-            // Usar todas as despesas deste usuário
-            const userExpenses = expenses
-              .filter(e => e.userId === user._id)
-              .reduce((sum, e) => sum + Math.abs(e.amount), 0);
-            return (
-              <div key={user._id} style={{
-                padding: '20px',
-                backgroundColor: isDark ? '#3d3d3d' : 'white',
-                borderRadius: '8px',
-                border: `1px solid ${isDark ? '#555' : '#ddd'}`
-              }}>
-                <h5 style={{ marginBottom: '15px', color: isDark ? '#fff' : '#333' }}>{user.name}</h5>
-                <div style={{ marginBottom: '10px' }}>
-                  <span style={{ fontSize: '14px', color: isDark ? '#ccc' : '#666' }}>Salários Anuais:</span>
-                  <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#007bff', margin: '5px 0' }}>
-                    €{userSalaries.toFixed(2)}
-                  </p>
-                </div>
-                <div style={{ marginBottom: '10px' }}>
-                  <span style={{ fontSize: '14px', color: isDark ? '#ccc' : '#666' }}>Despesas Anuais:</span>
-                  <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#dc3545', margin: '5px 0' }}>
-                    €{userExpenses.toFixed(2)}
-                  </p>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {userStats.map(stat => (
+          <div
+            key={stat.id}
+            className={`p-5 rounded-lg ${
+              isDark ? 'bg-gray-700' : 'bg-gray-50'
+            } shadow-sm`}
+          >
+            <h3 className="text-lg font-semibold mb-3">{stat.name}</h3>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span>Total Salary:</span>
+                <span className="text-green-500">€{stat.totalSalary.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Total Expenses:</span>
+                <span className="text-red-500">€{stat.totalExpenses.toFixed(2)}</span>
+              </div>
+              <div className={`pt-2 mt-2 border-t ${isDark ? 'border-gray-600' : 'border-gray-200'}`}>
+                <div className="flex justify-between font-medium">
+                  <span>Balance:</span>
+                  <span className={stat.balance >= 0 ? 'text-green-500' : 'text-red-500'}>
+                    €{stat.balance.toFixed(2)}
+                  </span>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </div>
-      
-      <h4>Gastos Mensais</h4>
-      <div style={{ 
-        overflowX: 'auto', 
-        width: '100%',
-        paddingBottom: '10px'
-      }}>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'flex-end',
-          gap: '10px', 
-          height: '200px',
-          minWidth: window.innerWidth <= 768 ? '600px' : 'auto',
-          paddingBottom: '5px'
-        }}>
-          {data.length > 0 ? (
-            data.map((item, index) => (
-              <div key={index} style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                alignItems: 'center',
-                flex: 1,
-                minWidth: '30px'
-              }}>
-                <div style={{
-                  height: `${(Math.abs(item.expenses) / maxExpense) * 150}px`,
-                  backgroundColor: isDark ? '#4a90e2' : '#007bff',
-                  width: '100%',
-                  borderRadius: '4px 4px 0 0',
-                  minHeight: '5px'
-                }}></div>
-                <small style={{ marginTop: '5px', fontSize: '12px' }}>
-                  {months[item.month - 1]}
-                </small>
-                <small style={{ fontSize: '10px', color: isDark ? '#ccc' : '#666' }}>
-                  €{Math.abs(item.expenses).toFixed(0)}
-                </small>
-              </div>
-            ))
-          ) : (
-            <div style={{ textAlign: 'center', width: '100%' }}>
-              <p>Carregando dados ou nenhum dado disponível para 2025</p>
             </div>
-          )}
-        </div>
+          </div>
+        ))}
       </div>
     </div>
   );
