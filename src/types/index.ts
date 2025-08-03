@@ -9,16 +9,6 @@ export interface Expense {
   createdAt: Date;
 }
 
-export interface User {
-  _id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-  role?: 'admin' | 'user';
-  createdAt?: Date;
-  updatedAt?: Date;
-}
-
 export interface Investment {
   _id?: string;
   userId: string;
