@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Expense, User } from '../types';
+import { Expense } from '@shared/types/core.types';
+import { User } from '@shared/types/user.types';
 import { useTheme } from '../../shared/components/ThemeProvider';
 import { ExpenseHistory } from './ExpenseHistory';
 

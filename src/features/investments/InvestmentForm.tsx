@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Investment, User } from '../types';
-import { investmentService } from '../services/api';
-import { useTheme } from './ThemeProvider';
-import { exchangeRates } from '../utils/currencyConverter';
+import { Investment } from '@shared/types/core.types';
+import { User } from '@shared/types/user.types';
+import { investmentService } from '../../shared/services/investment';
+import { useTheme } from '@shared/components/ThemeProvider';
+import { exchangeRates } from '@shared/utils/currencyConverter';
 
 interface InvestmentFormProps {
   currentUser: User;
@@ -33,7 +34,14 @@ export const InvestmentForm: React.FC<InvestmentFormProps> = ({ currentUser, onI
       // Remove customDate do objeto antes de enviar
       const { customDate, ...cleanInvestmentData } = investmentData;
       const response = await investmentService.create(cleanInvestmentData);
-      onInvestmentCreated(response.data);
+      onInvestmentCreated({
+        ...response.data,
+        userId: currentUser._id!,
+        asset: formData.asset,
+        quantity: Number(formData.quantity),
+        unitPrice: Number(formData.unitPrice),
+        currency: formData.currency
+      });
       setFormData({ asset: '', quantity: '', unitPrice: '', currency: 'EUR', description: '', customDate: '' });
     } catch (error) {
       console.error('Erro ao criar investimento:', error);

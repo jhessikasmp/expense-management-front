@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { User } from '../types';
-import { useTheme } from './ThemeProvider';
-import { fundService } from '../services/api';
+import { User } from '@shared/types/user.types';
+import { useTheme } from '@shared/components/ThemeProvider';
+import { fundService } from '@shared/services/fund';
 
 interface TravelEntry {
   _id?: string;
@@ -31,10 +31,10 @@ export const TravelFundForm: React.FC<TravelFundFormProps> = ({ currentUser, onT
       const isAdmin = adminIds.includes(currentUser._id!);
       if (isAdmin) {
         const response = await fundService.list('', 'travel');
-        setEntries(response.data);
+        setEntries(response.data as unknown as TravelEntry[]);
       } else {
         const response = await fundService.list(currentUser._id, 'travel');
-        setEntries(response.data);
+        setEntries(response.data as unknown as TravelEntry[]);
       }
     } catch (error) {
       console.error('Erro ao carregar entradas:', error);

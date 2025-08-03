@@ -1,10 +1,22 @@
-import { MonthlyContribution } from '../types';
+import { MonthlyContribution } from '../types/core.types';
 import { ApiResponse } from './api.types';
+import { api } from './api';
 
-export interface MonthlyContributionListResponse extends ApiResponse<MonthlyContribution[]> {}
-export interface MonthlyContributionCreateResponse extends ApiResponse<MonthlyContribution> {}
-export interface MonthlyContributionUpdateResponse extends ApiResponse<MonthlyContribution> {}
-export interface MonthlyContributionDeleteResponse extends ApiResponse<{ id: string }> {}
+interface MonthlyContributionListResponse extends ApiResponse {
+  data: MonthlyContribution[];
+}
+
+interface MonthlyContributionCreateResponse extends ApiResponse {
+  data: MonthlyContribution;
+}
+
+interface MonthlyContributionUpdateResponse extends ApiResponse {
+  data: MonthlyContribution;
+}
+
+interface MonthlyContributionDeleteResponse extends ApiResponse {
+  data: { id: string };
+}
 
 export type CreateMonthlyContributionDTO = Omit<MonthlyContribution, '_id' | 'createdAt' | 'updatedAt'>;
 export type UpdateMonthlyContributionDTO = Partial<Omit<MonthlyContribution, '_id' | 'createdAt' | 'updatedAt'>>;

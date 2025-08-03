@@ -1,5 +1,5 @@
-import { FundContribution } from '../../types';
-import { api } from '../api';
+import { FundContribution } from '@shared/types/fund.types';
+import { api } from '@shared/services/api';
 
 export const fundContributionService = {
   create: async (contribution: {

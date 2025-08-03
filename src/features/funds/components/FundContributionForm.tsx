@@ -1,19 +1,13 @@
-import React, { useState, ChangeEvent } from 'react';
-import { User } from '../../../types';
-import { useTheme } from '../../../shared/components/ThemeProvider';
+import React, { useState } from 'react';
+import { useTheme } from '@shared/components/ThemeProvider';
 
 interface FundContributionFormProps {
   fundId: string;
-  fundType: 'travel' | 'emergency' | 'car' | 'allowance';
-  currentUser: User;
   availableBalance: number;
   onContribute: (amount: number, date: string) => Promise<void>;
 }
 
 export const FundContributionForm: React.FC<FundContributionFormProps> = ({
-  fundId,
-  fundType,
-  currentUser,
   availableBalance,
   onContribute
 }) => {

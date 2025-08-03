@@ -1,4 +1,7 @@
-import { MonthlyContribution, User, Expense, Investment, TravelFund, MonthlySalary } from '../types';
+import type { MonthlyContribution, Investment, TravelFund, MonthlySalary, Expense } from './core.types';
+import type { User } from './user.types';
+
+export type { MonthlyContribution, Investment, TravelFund, MonthlySalary, Expense, User };
 
 // Base API Response
 export interface ApiResponse<T> {
@@ -11,10 +14,21 @@ export interface ApiResponse<T> {
 // Auth Responses
 export interface LoginResponse extends ApiResponse<User> {}
 export interface RegisterResponse extends ApiResponse<User> {}
+export interface AuthResponse extends ApiResponse<User> {}
+export interface UserCreateResponse extends ApiResponse<User> {}
+export interface UserListResponse extends ApiResponse<User[]> {}
 
 // Expense Responses
 export interface ExpenseListResponse extends ApiResponse<Expense[]> {}
 export interface ExpenseCreateResponse extends ApiResponse<Expense> {}
+export interface ExpenseUpdateResponse extends ApiResponse<Expense> {}
+export interface ExpenseDeleteResponse extends ApiResponse<{ id: string }> {}
+
+// Monthly Contribution Responses
+export interface MonthlyContributionListResponse extends ApiResponse<MonthlyContribution[]> {}
+export interface MonthlyContributionCreateResponse extends ApiResponse<MonthlyContribution> {}
+export interface MonthlyContributionUpdateResponse extends ApiResponse<MonthlyContribution> {}
+export interface MonthlyContributionDeleteResponse extends ApiResponse<{ id: string }> {}
 export interface ExpenseUpdateResponse extends ApiResponse<Expense> {}
 export interface ExpenseDeleteResponse extends ApiResponse<{ id: string }> {}
 

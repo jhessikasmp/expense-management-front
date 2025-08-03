@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { Dashboard } from './features/dashboard/Dashboard';
 import { Login } from './features/auth/Login';
@@ -11,26 +10,12 @@ import { CarReserve } from './features/funds/CarReserve';
 import { Allowance } from './components/Allowance';
 import { ThemeProvider, useTheme } from './shared/components/ThemeProvider';
 import { useUserState } from './shared/hooks/useUserState';
-import { User } from './shared/types/user.types';
-import { Tab, TabId, TabStyle, MenuItemStyle } from './shared/types/navigation.types';
-import { LoginCredentials } from './shared/types/auth.types';
-import {
-  DashboardProps,
-  ExpenseFormProps,
-  ExpenseHistoryProps,
-  InvestmentContainerProps,
-  TravelFundFormProps,
-  EmergencyFundProps,
-  CarReserveProps,
-  AllowanceProps,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  AnnualChartProps
-} from './shared/types/component.types';
+import type { Tab, TabId, TabStyle, MenuItemStyle } from '@shared/types/navigation.types';
 
 interface AppContentProps {}
 
 const AppContent: React.FC<AppContentProps> = () => {
-  const [activeTab, setActiveTab] = useState<TabId>('dashboard');
+    const [activeTab, setActiveTab] = useState<TabId>('dashboard');
   const [menuOpen, setMenuOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);

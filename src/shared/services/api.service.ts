@@ -1,11 +1,11 @@
 import axios, { AxiosResponse } from 'axios';
-import { User, Expense, Investment } from '../../types';
-import {
+import type { User } from '@shared/types/user.types';
+import type { Expense, Investment } from '@shared/types/core.types';
+import type {
   ApiResponse,
   ApiErrorResponse,
-  // Response Types
-  LoginResponse,
   RegisterResponse,
+  // Response Types
   ExpenseListResponse,
   ExpenseCreateResponse,
   ExpenseUpdateResponse,

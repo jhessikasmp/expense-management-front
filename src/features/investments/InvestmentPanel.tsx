@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { User, Investment } from '../../../types';
-import { investmentService } from '../../../services/api';
-import { AccordionItem } from '../../../shared/components/AccordionItem';
-import { useTheme } from '../../../shared/components/ThemeProvider';
+import { User, Investment } from '@shared/types';
+import { investmentService } from '@shared/services';
+import { AccordionItem } from '@shared/components/AccordionItem';
+import { useTheme } from '@shared/components/ThemeProvider';
 
 interface InvestmentFormData {
   asset: string;

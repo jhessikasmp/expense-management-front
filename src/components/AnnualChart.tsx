@@ -1,15 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useTheme } from '../shared/components/ThemeProvider';
-import { User } from '../shared/types/user.types';
-import { Salary, Expense } from '../types/annual.types';
-
-interface UserStats {
-  id: string;
-  name: string;
-  totalSalary: number;
-  totalExpenses: number;
-  balance: number;
-}
+import { useTheme } from '@shared/components/ThemeProvider';
+import type { User } from '@shared/types/user.types';
+import type { Salary, Expense } from '@shared/types/core.types';
+import type { ApiResponse } from '@shared/types/api.types';
 
 export const AnnualChart: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -44,11 +37,19 @@ export const AnnualChart: React.FC = () => {
         usersRes.json(),
         salariesRes.json(),
         expensesRes.json()
-      ]);
+      ]) as [
+        ApiResponse<User[]>,
+        ApiResponse<Salary[]>,
+        ApiResponse<Expense[]>
+      ];
 
-      setUsers(usersData);
-      setSalaries(salariesData);
-      setExpenses(expensesData);
+      if (usersData.success && salariesData.success && expensesData.success) {
+        setUsers(usersData.data);
+        setSalaries(salariesData.data);
+        setExpenses(expensesData.data);
+      } else {
+        throw new Error('Failed to fetch data');
+      }
     } catch (error) {
       setError('Error fetching data. Please try again later.');
       console.error('Error:', error);
@@ -64,13 +65,13 @@ export const AnnualChart: React.FC = () => {
   const userStats = useMemo(() => {
     return users.map(user => {
       const userSalaries = salaries
-        .filter(s => s.userId === user.id)
+        .filter(s => s.userId === user._id)
         .reduce((sum, s) => sum + s.amount, 0);
       const userExpenses = expenses
-        .filter(e => e.userId === user.id)
+        .filter(e => e.userId === user._id)
         .reduce((sum, e) => sum + Math.abs(e.amount), 0);
       return {
-        id: user.id,
+        id: user._id,
         name: user.name,
         totalSalary: userSalaries,
         totalExpenses: userExpenses,

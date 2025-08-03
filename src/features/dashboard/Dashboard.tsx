@@ -50,9 +50,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser }) => {
       try {
         setIsLoadingTravelFund(true);
         const response = await api.get<TravelFundListResponse>('/travel-funds');
-        const userTravelFunds = response.data.data.filter(fund => 
-          isAdmin || fund.userId === currentUser._id
-        );
+        const userTravelFunds = response.data.data
+          .filter(fund => isAdmin || fund.userId === currentUser._id)
+          .map(fund => ({
+            ...fund,
+            total: typeof fund.total === 'number' ? fund.total : 0
+          }));
         setTravelFunds(userTravelFunds);
         setTravelFundError(null);
       } catch (error) {

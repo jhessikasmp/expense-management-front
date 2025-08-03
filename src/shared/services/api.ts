@@ -1,9 +1,12 @@
 import axios, { AxiosResponse } from 'axios';
-import { User, Expense, Investment, TravelFund, MonthlySalary } from '../types';
-import {
+import type { User } from '@shared/types/user.types';
+import type { MonthlyContribution, Expense, Investment, TravelFund } from '@shared/types/core.types';
+import type {
   ApiResponse,
-  LoginResponse,
   RegisterResponse,
+  MonthlyContributionListResponse,
+  MonthlyContributionUpdateResponse,
+  MonthlyContributionDeleteResponse,
   ExpenseListResponse,
   ExpenseCreateResponse,
   ExpenseUpdateResponse,
@@ -17,11 +20,11 @@ import {
   SalaryListResponse,
   SalaryCreateResponse,
   ApiErrorResponse
-} from '../types/api';
+} from '@shared/types/api.types';
 
 const API_BASE_URL = 'https://expense-management-back.onrender.com/api';
 
-const api = axios.create({
+export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
@@ -30,7 +33,7 @@ const api = axios.create({
 
 // Add response interceptor to standardize API responses
 api.interceptors.response.use(
-  (response: AxiosResponse<ApiResponse<any>>) => response.data,
+  (response: AxiosResponse<ApiResponse<any>>) => response,
   (error) => {
     const errorResponse: ApiErrorResponse = {
       success: false,
@@ -104,9 +107,14 @@ export const travelFundService = {
   list: (userId?: string) => 
     api.get<TravelFundListResponse>('/travel-funds', { params: { userId } }),
 };
+
+export const monthlyContributionService = {
   update: (id: string, contribution: Partial<MonthlyContribution>) => 
-    api.put<MonthlyContribution>(`/monthly-contributions/${id}`, contribution),
-  delete: (id: string) => api.delete(`/monthly-contributions/${id}`),
+    api.put<MonthlyContributionUpdateResponse>(`/monthly-contributions/${id}`, contribution),
+  delete: (id: string) => 
+    api.delete<MonthlyContributionDeleteResponse>(`/monthly-contributions/${id}`),
   getActive: (userId?: string) => 
-    api.get<MonthlyContribution[]>('/monthly-contributions/active', { params: { userId } }),
+    api.get<MonthlyContributionListResponse>('/monthly-contributions/active', { params: { userId } }),
 };
+
+export { fundService } from './fundService';

@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { MonthlyContribution } from '../types';
+import { MonthlyContribution } from '@shared/types/core.types';
 
 interface MonthlyContributionFormProps {
   fundId: string;
   userId: string;
+  fundType: 'emergency' | 'travel' | 'car' | 'allowance';
   onSubmit: (contribution: MonthlyContribution) => void;
-  onError: (err: Error) => void;
+  onError: (message: string) => void;
 }
 
 const MonthlyContributionForm: React.FC<MonthlyContributionFormProps> = ({
   fundId,
   userId,
+  fundType,
   onSubmit,
   onError
 }) => {
@@ -29,7 +31,9 @@ const MonthlyContributionForm: React.FC<MonthlyContributionFormProps> = ({
         userId,
         isActive: true,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
+        currency: 'EUR',
+        fundType
       };
       
       onSubmit(contribution);
@@ -38,9 +42,11 @@ const MonthlyContributionForm: React.FC<MonthlyContributionFormProps> = ({
       setDayOfMonth(1);
     } catch (err) {
       if (err instanceof Error) {
+        onError(err.message);
+      } else if (typeof err === 'string') {
         onError(err);
       } else {
-        onError(new Error('An unknown error occurred'));
+        onError('An unknown error occurred');
       }
     }
   };
@@ -92,10 +98,10 @@ export default MonthlyContributionForm;
 // Example: define userId and fundId before using them
 const userId = "yourUserId"; // Replace with actual user id value
 const fundId = "yourFundId"; // Replace with actual fund id value
-const handleNewContribution = (contribution: MonthlyContribution) => {
+const handleNewContribution = () => {
   // handle contribution logic here
 };
-const setError = (msg: string) => {
+const setError = () => {
   // handle error logic here
 };
 
@@ -103,5 +109,4 @@ const setError = (msg: string) => {
   fundId={fundId}
   userId={userId}
   onSubmit={handleNewContribution}
-  onError={(err: Error) => setError(err.message)}
-/>
+  onError={setError} fundType={'emergency'}/>

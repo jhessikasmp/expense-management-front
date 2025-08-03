@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { User, FundEntry } from '../types';
-import { useTheme } from '../../shared/components/ThemeProvider';
-import MonthlyContributionsPanel from './MonthlyContributionsPanel';
-import { localStorageService } from '../services/localStorageService';
+import { FundEntry } from '@shared/types/core.types';
+import { User } from '@shared/types/user.types';
+import MonthlyContributionsPanel from '@components/MonthlyContributionsPanel';
+import { useTheme } from '@shared/components/ThemeProvider';
+import { localStorageService } from '@shared/services/localStorageService';
 
 interface CarReserveProps {
   currentUser: User;

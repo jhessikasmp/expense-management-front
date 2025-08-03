@@ -1,17 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { User } from '../types';
-import { fundService } from '../services/api';
-import { useTheme } from './ThemeProvider';
-
-interface FundEntry {
-  _id?: string;
-  userId: string;
-  name: string;
-  description: string;
-  amount: number;
-  type: 'income' | 'expense';
-  createdAt?: Date;
-}
+import type { User } from '@shared/types/user.types';
+import type { FundEntry } from '@shared/types/core.types';
+import { fundService } from '@shared/services/api';
+import { useTheme } from '@shared/components/ThemeProvider';
 
 interface AllowanceProps {
   currentUser: User;
@@ -56,10 +47,12 @@ export const Allowance: React.FC<AllowanceProps> = ({ currentUser }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newEntry: FundEntry = {
-      ...formData,
       userId: currentUser._id!,
       type: 'expense',
       amount: -Math.abs(Number(formData.amount)),
+      name: formData.name,
+      description: formData.description,
+      category: 'allowance',
       createdAt: formData.customDate ? new Date(formData.customDate) : new Date()
     };
     

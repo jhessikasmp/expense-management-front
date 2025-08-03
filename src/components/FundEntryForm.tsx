@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
 
 interface FundEntryFormProps {
-  fundId: string;
-  userId: string;
   onSubmit: (entry: {amount: number; description: string}) => void;
   onError: (error: Error) => void;
 }
 
 const FundEntryForm: React.FC<FundEntryFormProps> = ({
-  fundId,
-  userId,
   onSubmit,
   onError
 }) => {

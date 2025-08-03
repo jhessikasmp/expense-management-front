@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Expense, User } from '../types';
-import { expenseService, userService } from '../services/api';
-import { useTheme } from './ThemeProvider';
+import { Expense } from '@shared/types/core.types';
+import { User } from '@shared/types/user.types';
+import { expenseService } from '@shared/services/expense';
+import { userService } from '@shared/services/user';
+import { useTheme } from '@shared/components/ThemeProvider';
 
 interface ExpenseHistoryProps {
   currentUser: User;
@@ -25,8 +27,10 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({ currentUser, onE
         expenseService.list(),
         userService.list()
       ]);
-      const expenses = expensesRes.data;
-      setUsers(usersRes.data);
+
+      if (Array.isArray(usersRes.data)) {
+        setUsers(usersRes.data);
+      }
       
       const currentMonth = new Date().getMonth();
       const currentYear = new Date().getFullYear();
@@ -34,18 +38,19 @@ export const ExpenseHistory: React.FC<ExpenseHistoryProps> = ({ currentUser, onE
       // Admin users veem todos os dados (IDs específicos)
       const adminIds = ["6884f1b07f0be3c02772d85c", "6884f319e268d1d9a7613530"]; // Antonio e Jhessika
       const isAdmin = adminIds.includes(currentUser._id!);
-      const userExpenses = isAdmin ? expenses : expenses.filter(expense => expense.userId === currentUser._id);
+      if (!Array.isArray(expensesRes.data)) return;
+      const userExpenses = isAdmin ? expensesRes.data : expensesRes.data.filter((expense: Expense) => expense.userId === currentUser._id);
       
-      const current = userExpenses.filter(expense => {
+      const current = userExpenses.filter((expense: Expense) => {
         const expenseDate = new Date(expense.createdAt!);
         return expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear;
       });
       
       const previous: { [key: string]: Expense[] } = {};
-      userExpenses.filter(expense => {
+      userExpenses.filter((expense: Expense) => {
         const expenseDate = new Date(expense.createdAt!);
         return !(expenseDate.getMonth() === currentMonth && expenseDate.getFullYear() === currentYear);
-      }).forEach(expense => {
+      }).forEach((expense: Expense) => {
         const expenseDate = new Date(expense.createdAt!);
         const monthLabel = expenseDate.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
         

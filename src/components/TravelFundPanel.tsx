@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { TravelFund, User } from '../types';
-import { travelFundService } from '../services/api';
-import { useTheme } from './ThemeProvider';
-import MonthlyContributionsPanel from './MonthlyContributionsPanel';
+import { TravelFund } from '@shared/types/core.types';
+import { User } from '@shared/types/user.types';
+import { travelFundService } from '@shared/services/travelFund';
+import { useTheme } from '@shared/components/ThemeProvider';
+import MonthlyContributionsPanel from '@components/MonthlyContributionsPanel';
 
 interface TravelFundPanelProps {
   users: User[];
@@ -25,7 +26,9 @@ export const TravelFundPanel: React.FC<TravelFundPanelProps> = ({ users }) => {
   const loadFunds = async () => {
     try {
       const response = await travelFundService.list();
-      setFunds(response.data);
+      if (Array.isArray(response.data)) {
+        setFunds(response.data);
+      }
     } catch (error) {
       console.error('Erro ao carregar fundos:', error);
     }
@@ -73,7 +76,7 @@ export const TravelFundPanel: React.FC<TravelFundPanelProps> = ({ users }) => {
     fontSize: '16px'
   };
 
-  const totalFunds = funds.reduce((sum, fund) => sum + fund.total, 0);
+  const totalFunds = funds.reduce((sum, fund) => sum + (fund.total || 0), 0);
 
   return (
     <div style={{ padding: '20px' }}>
@@ -217,7 +220,7 @@ export const TravelFundPanel: React.FC<TravelFundPanelProps> = ({ users }) => {
               </div>
               <div style={{ textAlign: 'right' }}>
                 <p style={{ margin: '0', fontSize: '18px', fontWeight: 'bold' }}>
-                  {fund.currency} {fund.total.toFixed(2)}
+                  {fund.currency} {(fund.total || 0).toFixed(2)}
                 </p>
               </div>
             </div>

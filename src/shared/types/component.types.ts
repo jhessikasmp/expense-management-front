@@ -1,13 +1,23 @@
-import { User } from './user.types';
-import { 
+import type { User } from '@shared/types/user.types';
+import type { 
   Expense, 
   Investment, 
-  TravelFund, 
-  EmergencyFund as EmergencyFundType, 
-  CarFund, 
-  Allowance as AllowanceType,
-  DashboardData 
-} from './api.types';
+  TravelFund,
+  MonthlyContribution,
+  EmergencyFund,
+  CarFund,
+  Allowance 
+} from '@shared/types/core.types';
+
+export interface DashboardData {
+  expenses: Expense[];
+  investments: Investment[];
+  travelFunds: TravelFund[];
+  monthlyContributions: MonthlyContribution[];
+  totalExpenses?: number;
+  totalInvestments?: number;
+  totalFunds?: number;
+}
 
 export interface DashboardProps {
   currentUser: User;
@@ -49,7 +59,7 @@ export interface TravelFundFormProps {
 
 export interface EmergencyFundProps {
   currentUser: User;
-  fund?: EmergencyFundType;
+  fund?: EmergencyFund;
   onEmergencyFundUpdated?: () => void;
   key?: number;
 }
@@ -63,7 +73,7 @@ export interface CarReserveProps {
 
 export interface AllowanceProps {
   currentUser: User;
-  allowance?: AllowanceType;
+  allowance?: Allowance;
   onAllowanceUpdated?: () => void;
   key?: number;
 }

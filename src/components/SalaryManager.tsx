@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { User } from '../types';
-import { userService, salaryService } from '../services/api';
-import { useTheme } from './ThemeProvider';
+import { User } from '@shared/types/user.types';
+import { salaryService } from '@shared/services/salary';
+import { useTheme } from '@shared/components/ThemeProvider';
 
 interface SalaryManagerProps {
   currentUser: User;
@@ -18,17 +18,8 @@ export const SalaryManager: React.FC<SalaryManagerProps> = ({ currentUser, onSal
     setLoading(true);
     
     try {
-      const currentDate = new Date();
-      const month = currentDate.getMonth() + 1;
-      const year = currentDate.getFullYear();
-      
       // Adicionar salário mensal ao histórico
-      await salaryService.add({
-        userId: currentUser._id!,
-        amount: Number(salary),
-        month,
-        year
-      });
+      await salaryService.update(currentUser._id!, Number(salary), 'USD');
       
       // Salário agora é gerenciado apenas no histórico mensal
       onSalaryUpdated(currentUser);

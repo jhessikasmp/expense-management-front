@@ -1,4 +1,4 @@
-import { FundEntry, Investment, MonthlyContribution } from '../types';
+import { FundEntry, Investment, MonthlyContribution } from '@shared/types/core.types';
 
 const KEYS = {
   EMERGENCY_FUND: 'emergency_fund',

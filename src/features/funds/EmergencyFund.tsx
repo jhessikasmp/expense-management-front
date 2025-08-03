@@ -1,9 +1,10 @@
 import React, { useEffect, useCallback, useState } from 'react';
-import { User, FundEntry } from '../types';
-import { useTheme } from '../../shared/components/ThemeProvider';
-import FundEntryForm from './FundEntryForm';
-import MonthlyContributionsPanel from './MonthlyContributionsPanel';
-import { fundService } from '../services/api';
+import { FundEntry } from '@shared/types/core.types';
+import { User } from '@shared/types/user.types';
+import { useTheme } from '@shared/components/ThemeProvider';
+import FundEntryForm from '@components/FundEntryForm';
+import MonthlyContributionsPanel from '@components/MonthlyContributionsPanel';
+import { fundService } from '../../shared/services/fund';
 
 interface EmergencyFundProps {
   currentUser: User;
@@ -24,7 +25,7 @@ export const EmergencyFund: React.FC<EmergencyFundProps> = ({ currentUser }) => 
   const loadEntries = useCallback(async () => {
     try {
       const entries = await fundService.list(currentUser._id, 'emergency');
-      setEntries(entries.data);
+      setEntries(entries.data as unknown as FundEntry[]);
     } catch (error) {
       console.error('Erro ao carregar entradas:', error);
     }
@@ -102,8 +103,6 @@ export const EmergencyFund: React.FC<EmergencyFundProps> = ({ currentUser }) => 
       <h2>Fundo de Emergência</h2>
       
       <FundEntryForm
-        fundId="emergency"
-        userId={currentUser._id}
         onSubmit={(entry: { amount: number; description: string }) => {
           fundService.create({
             userId: currentUser._id,

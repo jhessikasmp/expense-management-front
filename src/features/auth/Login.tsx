@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { User } from '../types';
-import { userService } from '../services/api';
-import { useTheme } from './ThemeProvider';
+import { User } from '@shared/types/user.types';
+import { userService } from '@shared/services/user';
+import { useTheme } from '@shared/components/ThemeProvider';
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -24,12 +24,24 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
           name: name.trim(),
           currency: 'EUR'
         });
-        onLogin(response.data);
+        // Extract user from response and convert date fields
+        const userData = response.data.data;
+        const user: User = {
+          ...userData,
+          createdAt: new Date(userData.createdAt),
+          updatedAt: new Date(userData.updatedAt)
+        };
+        onLogin(user);
       } else {
         const response = await userService.list();
-        const user = response.data.find(u => u.name.toLowerCase() === name.toLowerCase());
+        const user = response.data.find((u: User) => u.name.toLowerCase() === name.toLowerCase()) as User | undefined;
         if (user) {
-          onLogin(user);
+          // Ensure date fields are Date objects
+          onLogin({
+            ...user,
+            createdAt: new Date(user.createdAt),
+            updatedAt: new Date(user.updatedAt)
+          });
         } else {
           alert('Usuário não encontrado. Clique em "Registrar" para criar uma conta.');
         }

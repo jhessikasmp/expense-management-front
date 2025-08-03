@@ -1,9 +1,11 @@
 export interface User {
-  id: string;
+  _id: string;
   name: string;
   email: string;
-  createdAt: string;
-  updatedAt: string;
+  role?: 'admin' | 'user';
+  createdAt: Date;
+  updatedAt: Date;
+  currency?: string;
 }
 
 export interface UserError {

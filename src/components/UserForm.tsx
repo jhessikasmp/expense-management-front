@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { User } from '../types';
-import { userService } from '../services/api';
+import { User } from '@shared/types/user.types';
+import { userService } from '@shared/services/user';
 
 interface UserFormProps {
   onUserCreated: (user: User) => void;
@@ -18,7 +18,15 @@ export const UserForm: React.FC<UserFormProps> = ({ onUserCreated }) => {
         ...formData,
         currency: 'EUR'
       });
-      onUserCreated(response.data);
+      const userData = response.data;
+      const user: User = {
+        _id: userData._id,
+        name: userData.name,
+        email: userData.email,
+        createdAt: new Date(userData.createdAt),
+        updatedAt: new Date(userData.updatedAt)
+      };
+      onUserCreated(user);
       setFormData({ name: '' });
     } catch (error: any) {
       console.error('Erro completo ao criar usuário:', error);

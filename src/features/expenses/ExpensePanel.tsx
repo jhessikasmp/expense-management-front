@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { ExpenseForm } from './ExpenseForm';
 import { ExpenseHistory } from './ExpenseHistory';
-import { useTheme } from '../../shared/components/ThemeProvider';
-import { User, Expense } from '../../types';
+import { useTheme } from '@shared/components/ThemeProvider';
+import { User } from '@shared/types/user.types';
+import { Expense } from '@shared/types/api.types';
 
 type SubTab = 'add' | 'history';
 

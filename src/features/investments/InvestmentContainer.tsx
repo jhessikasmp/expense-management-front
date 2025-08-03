@@ -1,5 +1,6 @@
 import React from 'react';
-import { User, Investment } from '../types';
+import { Investment } from '@shared/types/core.types';
+import { User } from '@shared/types/user.types';
 import { InvestmentForm } from './InvestmentForm';
 import { InvestmentPanel } from './InvestmentPanel';
 

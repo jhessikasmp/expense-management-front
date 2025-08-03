@@ -1,23 +1,15 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { MonthlyContribution } from '../../types';
-import { useTheme } from '../shared/components/ThemeProvider';
-import { localStorageService } from '../../services/localStorageService';
-import MonthlyContributionForm from '../MonthlyContributionForm';
-import { monthlyContributionService } from '../../services/api';
+import { MonthlyContribution } from '@shared/types/core.types';
+import { useTheme } from '@shared/components/ThemeProvider';
+import { localStorageService } from '@shared/services/localStorageService';
+import MonthlyContributionForm from '@components/MonthlyContributionForm';
+import { monthlyContributionService } from '@shared/services/monthlyContribution';
 
 interface MonthlyContributionsPanelProps {
   userId: string;
   fundId: string;
 }
 
-interface MonthlyContributionResponse {
-  data: MonthlyContribution & {
-    _id: string;
-    isActive: boolean;
-    amount: number;
-    dayOfMonth: number;
-  };
-}
 
 const MonthlyContributionsPanel: React.FC<MonthlyContributionsPanelProps> = ({ userId, fundId }) => {
   const [contributions, setContributions] = useState<MonthlyContribution[]>([]);
@@ -55,7 +47,7 @@ const MonthlyContributionsPanel: React.FC<MonthlyContributionsPanelProps> = ({ u
 
     try {
       setError(null);
-      const savedContribution = await monthlyContributionService.create(contribution) as MonthlyContributionResponse;
+      const savedContribution = (await monthlyContributionService.create(contribution))?.data;
       setContributions(prev => [...prev, savedContribution.data]);
     } catch (err: unknown) {
       setError('Erro ao adicionar contribuição');
@@ -71,7 +63,7 @@ const MonthlyContributionsPanel: React.FC<MonthlyContributionsPanelProps> = ({ u
 
     try {
       setError(null);
-      await monthlyContributionService.delete(id);
+      await monthlyContributionService.remove(id);
       setContributions(prev => prev.filter(c => c._id === id));
     } catch (err: unknown) {
       setError('Erro ao excluir contribuição');
@@ -87,7 +79,7 @@ const MonthlyContributionsPanel: React.FC<MonthlyContributionsPanelProps> = ({ u
 
     try {
       setError(null);
-      const response = await monthlyContributionService.update(id, { isActive }) as MonthlyContributionResponse;
+      const response = (await monthlyContributionService.update(id, { isActive }))?.data;
       
       if (!response.data) {
         throw new Error('Resposta inválida do servidor');
@@ -119,8 +111,9 @@ const MonthlyContributionsPanel: React.FC<MonthlyContributionsPanelProps> = ({ u
       <MonthlyContributionForm
         fundId={fundId}
         userId={userId}
+        fundType="allowance"
         onSubmit={handleNewContribution}
-        onError={(err: Error) => setError(err.message)}
+        onError={setError}
       />
 
       {error && (
@@ -162,7 +155,7 @@ const MonthlyContributionsPanel: React.FC<MonthlyContributionsPanelProps> = ({ u
                   </div>
                   <div className="flex items-center space-x-4">
                     <button
-                      onClick={() => handleToggleActive(contribution._id, isActive)}
+                      onClick={() => contribution._id && handleToggleActive(contribution._id, isActive)}
                       className={`px-3 py-1 text-sm rounded-full ${
                         isActive
                           ? 'bg-green-100 text-green-800'
@@ -174,7 +167,7 @@ const MonthlyContributionsPanel: React.FC<MonthlyContributionsPanelProps> = ({ u
                       {isActive ? 'Ativo' : 'Inativo'}
                     </button>
                     <button
-                      onClick={() => handleDeleteContribution(contribution._id)}
+                      onClick={() => contribution._id && handleDeleteContribution(contribution._id)}
                       className="text-red-500 hover:text-red-600"
                     >
                       Excluir

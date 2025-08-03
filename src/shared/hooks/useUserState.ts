@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { User } from '../../types';
-import { parseStoredUser } from '../utils/typeGuards';
+import { User } from '@shared/types/user.types';
+import { parseStoredUser } from '@shared/utils/typeGuards';
 
 interface UseUserState {
   currentUser: User | null;
@@ -19,7 +19,11 @@ export const useUserState = (): UseUserState => {
     try {
       const savedUser = localStorage.getItem('currentUser');
       const parsedUser = parseStoredUser(savedUser);
-      setCurrentUser(parsedUser);
+      if (parsedUser && !parsedUser.createdAt) {
+        // Ensure createdAt is always a Date
+        parsedUser.createdAt = new Date();
+      }
+      setCurrentUser(parsedUser as User | null);
     } catch (err) {
       setError(err instanceof Error ? err : new Error('Failed to load user'));
     } finally {

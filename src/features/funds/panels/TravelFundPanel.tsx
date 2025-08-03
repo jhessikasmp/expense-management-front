@@ -23,11 +23,6 @@ interface TravelFundPanelProps {
   onContributionAdded: () => void;
 }
 
-interface FundContributionResponse {
-  data: {
-    data: FundContribution[];
-  };
-}
 
 export const TravelFundPanel: React.FC<TravelFundPanelProps> = ({
   currentUser,
@@ -50,8 +45,15 @@ export const TravelFundPanel: React.FC<TravelFundPanelProps> = ({
   const loadContributions = useCallback(async (): Promise<void> => {
     try {
       setIsLoading(true);
-      const response = await fundContributionService.list(fundId) as FundContributionResponse;
-      setContributions(response.data.data ?? []);
+      const response = await fundContributionService.list(fundId);
+      const mappedContributions = response.data.data.map(c => ({
+        ...c,
+        fundType: 'travel' as const,
+        date: new Date().toISOString(),
+        createdAt: c.createdAt ? c.createdAt.toISOString() : undefined,
+        updatedAt: c.updatedAt ? c.updatedAt.toISOString() : undefined
+      }));
+      setContributions(mappedContributions);
       setError(null);
     } catch (err: unknown) {
       console.error('Error loading contributions:', err);
@@ -126,8 +128,6 @@ export const TravelFundPanel: React.FC<TravelFundPanelProps> = ({
         <div>
           <FundContributionForm
             fundId={fundId}
-            fundType="travel"
-            currentUser={currentUser}
             availableBalance={availableBalance}
             onContribute={handleContribute}
           />

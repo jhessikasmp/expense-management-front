@@ -11,13 +11,20 @@ export const isUser = (value: unknown): value is User => {
   );
 };
 
-export const parseStoredUser = (storedUser: string | null): User | null => {
+export function parseStoredUser(storedUser: string | null): User | null {
   if (!storedUser) return null;
   
   try {
     const parsed = JSON.parse(storedUser);
-    return isUser(parsed) ? parsed : null;
-  } catch {
+    if (!isUser(parsed)) return null;
+    
+    return {
+      ...parsed,
+      createdAt: parsed.createdAt ? new Date(parsed.createdAt) : new Date(),
+      updatedAt: parsed.updatedAt ? new Date(parsed.updatedAt) : new Date()
+    };
+  } catch (e) {
+    console.error('Error parsing stored user:', e);
     return null;
   }
 };

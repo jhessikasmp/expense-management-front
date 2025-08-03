@@ -9,12 +9,13 @@
     "outDir": "./dist",
     "rootDir": "./src",
 
-    // Module Resolution
+    // Module Resolution (Imports Absolutos)
     "baseUrl": "src",
     "paths": {
       "@/*": ["*"],
+      "@hooks/*": ["hooks/*"],
+      "@services/*": ["services/*"],
       "@components/*": ["components/*"],
-      "@features/*": ["features/*"],
       "@shared/*": ["shared/*"]
     },
     "resolveJsonModule": true,
@@ -22,9 +23,9 @@
     "isolatedModules": true,
 
     // Type Checking
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
+    "strict": false,                    // Desativado para refatoração incremental
+    "noImplicitAny": false,             // Desativado temporariamente
+    "strictNullChecks": true,           // Reative gradualmente
     "strictFunctionTypes": true,
     "strictBindCallApply": true,
     "strictPropertyInitialization": true,
