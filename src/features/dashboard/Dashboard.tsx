@@ -116,43 +116,99 @@ export const Dashboard: React.FC<DashboardProps> = ({ currentUser }) => {
     <div className="p-5">
       <h2 className="text-2xl font-bold mb-6">Dashboard Financeiro</h2>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className={`p-5 rounded-lg ${isDark ? 'bg-blue-900 text-white' : 'bg-blue-50'}`}>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        <div className={`p-5 rounded-lg shadow-lg ${isDark ? 'bg-blue-900 text-white' : 'bg-blue-50'}`}>
           <h3 className="text-lg font-semibold mb-2">Salários do Mês</h3>
           <p className="text-2xl font-bold">€{totalMonthlySalaries.toFixed(2)}</p>
+          <div className="mt-4">
+            {monthlySalaries.map(salary => (
+              <div key={salary._id} className="text-sm mt-2 p-2 rounded bg-opacity-20 bg-white">
+                <p className="font-semibold">€{salary.amount.toFixed(2)}</p>
+                <p className="text-sm opacity-75">{salary.createdAt ? new Date(salary.createdAt).toLocaleDateString() : ''}</p>
+              </div>
+            ))}
+          </div>
         </div>
         
-        <div className={`p-5 rounded-lg ${isDark ? 'bg-red-900 text-white' : 'bg-red-50'}`}>
+        <div className={`p-5 rounded-lg shadow-lg ${isDark ? 'bg-red-900 text-white' : 'bg-red-50'}`}>
           <h3 className="text-lg font-semibold mb-2">Total Despesas</h3>
           <p className="text-2xl font-bold">€{totalExpenses.toFixed(2)}</p>
+          <div className="mt-4 max-h-48 overflow-y-auto">
+            {expenses.map(expense => (
+              <div key={expense._id} className="text-sm mt-2 p-2 rounded bg-opacity-20 bg-white">
+                <p className="font-semibold">€{expense.amount.toFixed(2)}</p>
+                <p className="text-sm">{expense.description}</p>
+                <p className="text-xs opacity-75">{expense.category} - {expense.createdAt ? new Date(expense.createdAt).toLocaleDateString() : ''}</p>
+              </div>
+            ))}
+          </div>
         </div>
         
-        <div className={`p-5 rounded-lg ${
+        <div className={`p-5 rounded-lg shadow-lg ${
           remainingBalance >= 0 
             ? isDark ? 'bg-green-900 text-white' : 'bg-green-50'
             : isDark ? 'bg-red-900 text-white' : 'bg-red-50'
         }`}>
           <h3 className="text-lg font-semibold mb-2">Saldo do Mês</h3>
           <p className={`text-2xl font-bold ${
-            remainingBalance >= 0 ? 'text-green-600' : 'text-red-600'
+            remainingBalance >= 0 
+              ? isDark ? 'text-green-300' : 'text-green-600'
+              : isDark ? 'text-red-300' : 'text-red-600'
           }`}>
             €{remainingBalance.toFixed(2)}
           </p>
+          <div className="mt-4 text-sm">
+            <p>Receitas: €{totalMonthlySalaries.toFixed(2)}</p>
+            <p>Despesas: €{totalExpenses.toFixed(2)}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Investment and Travel Fund Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className={`p-5 rounded-lg shadow-lg ${isDark ? 'bg-green-900 text-white' : 'bg-green-50'}`}>
+          <h3 className="text-lg font-semibold mb-2">Investimentos</h3>
+          <p className="text-2xl font-bold mb-4">€{totalInvestments.toFixed(2)}</p>
+          <div className="max-h-48 overflow-y-auto">
+            {investments.map(inv => (
+              <div key={inv._id} className="text-sm mt-2 p-2 rounded bg-opacity-20 bg-white">
+                <p className="font-semibold">{inv.asset}</p>
+                <p className="text-sm">Quantidade: {inv.quantity}</p>
+                <p className="text-sm">Preço Unitário: €{inv.unitPrice.toFixed(2)}</p>
+                <p className="text-sm font-medium">Total: €{(inv.quantity * inv.unitPrice).toFixed(2)}</p>
+              </div>
+            ))}
+          </div>
         </div>
         
-        <div className={`p-5 rounded-lg ${isDark ? 'bg-green-900 text-white' : 'bg-green-50'}`}>
-          <h3 className="text-lg font-semibold mb-2">Total Investimentos</h3>
-          <p className="text-2xl font-bold">€{totalInvestments.toFixed(2)}</p>
-        </div>
-        
-        <div className={`p-5 rounded-lg ${isDark ? 'bg-yellow-900 text-white' : 'bg-yellow-50'}`}>
+        <div className={`p-5 rounded-lg shadow-lg ${isDark ? 'bg-yellow-900 text-white' : 'bg-yellow-50'}`}>
           <h3 className="text-lg font-semibold mb-2">Fundo de Viagem</h3>
           {isLoadingTravelFund ? (
             <p className="text-2xl font-bold">Carregando...</p>
           ) : travelFundError ? (
             <p className="text-red-600 text-sm">{travelFundError}</p>
           ) : (
-            <p className="text-2xl font-bold">€{totalTravelFunds.toFixed(2)}</p>
+            <>
+              <p className="text-2xl font-bold mb-4">€{totalTravelFunds.toFixed(2)}</p>
+              <div className="max-h-48 overflow-y-auto">
+                {travelFunds
+                  .filter(fund => 
+                    fund.createdAt && 
+                    new Date(fund.createdAt).getMonth() + 1 === currentMonth && 
+                    new Date(fund.createdAt).getFullYear() === targetYear
+                  )
+                  .map(fund => (
+                    <div key={fund._id} className="text-sm mt-2 p-2 rounded bg-opacity-20 bg-white">
+                      <p className="font-semibold">€{fund.total.toFixed(2)}</p>
+                      <p className="text-xs opacity-75">
+                        {fund.createdAt ? new Date(fund.createdAt).toLocaleDateString() : ''}
+                      </p>
+                    </div>
+                  ))
+                }
+              </div>
+            </>
           )}
         </div>
       </div>
